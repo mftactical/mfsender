@@ -407,8 +407,23 @@ export class CNCController extends EventEmitter {
           newStatus.mistCoolant = false;
         }
       } else if (key === 'Pn') {
-        // Pin state: P=Probe, X/Y/Z=Limit switches, etc.
-        newStatus.Pn = value || '';
+  // FluidNC reports probe/toolsetter as P0 / T0 in Pn
+  // ncSender expects letters to light LEDs
+  let v = value || '';
+
+  // Normalize FluidNC tokens
+  v = v.replaceAll('P0', 'P');
+  v = v.replaceAll('T0', 'T');
+
+  // If toolsetter (T) is present but no probe (P),
+  // map it to probe so UI lights correctly
+  if (v.includes('T') && !v.includes('P')) {
+    v += 'P';
+  }
+
+  newStatus.Pn = v;
+}
+
       } else if (key === 'P') {
         // Active probe input (grblHAL enhanced I/O monitoring)
         newStatus.activeProbe = parseInt(value, 10);
