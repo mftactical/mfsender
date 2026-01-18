@@ -1,12 +1,10 @@
 ﻿{
   "name": "mfsender",
   "version": "0.1.0-mf",
-  "description": "ncSender - Unified CNC Controller Electron App",
-  "homepage": "https://github.com/siganberg/ncSender",
-  "author": {
-    "name": "mfsender",
-    "email": "support@franciscreation.com"
-  },
+  "description": "CNC sender optimized for FluidNC",
+  "homepage": "https://github.com/mftactical/mfsender",
+  "author": "MF Tactical",
+  "repository": "https://github.com/mftactical/mfsender",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
@@ -72,7 +70,7 @@
       "**/*.mtl"
     ],
     "mac": {
-      "icon": "assets/icon.icns",
+      "icon": "app/assets/icon.png",
       "category": "public.app-category.productivity",
       "target": [
         "dmg",
@@ -80,10 +78,10 @@
       ]
     },
     "win": {
-      "icon": "assets/icon.ico"
+      "icon": "app/assets/icon.ico"
     },
     "linux": {
-      "icon": "assets/icons",
+      "icon": "app/assets/icon.png",
       "category": "Office",
       "target": [
         "AppImage",
