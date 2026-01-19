@@ -85,6 +85,7 @@ export class CNCController extends EventEmitter {
     this.lastConnectionErrorLog = 0;
     this.lastDisconnectLog = 0;
     this.connectionErrorThrottleMs = 30000; // Log connection errors max once per 30 seconds
+    this.lastSeenAlarmCode = null;
   }
 
   emitConnectionStatus(status, isConnected = this.isConnected) {
@@ -114,20 +115,25 @@ export class CNCController extends EventEmitter {
           // Ignore errors during initial setup
         });
 
-        // Request tool length offset status
-        this.sendCommand('$#=_tool_offset', { meta: { sourceId: 'system' } }).catch(() => {
-          // Ignore errors during initial setup
-        });
+        const isAlarmStatus = trimmedData.startsWith('<Alarm|') || trimmedData.startsWith('<Alarm:') || trimmedData.includes('|Alarm');
+        if (!isAlarmStatus) {
+          // Request tool length offset status
+          this.sendCommand('$#=_tool_offset', { meta: { sourceId: 'system' } }).catch(() => {
+            // Ignore errors during initial setup
+          });
 
-        // Request system info to get AUX IO pin counts (also handled by firmware/routes.js for UI)
-        this.sendCommand('$I', { meta: { sourceId: 'system' } }).catch(() => {
-          // Ignore errors during initial setup
-        });
+          // Request system info to get AUX IO pin counts (also handled by firmware/routes.js for UI)
+          this.sendCommand('$I', { meta: { sourceId: 'system' } }).catch(() => {
+            // Ignore errors during initial setup
+          });
 
-        // Request pin states to get initial output pin states
-        this.sendCommand('$pinstate', { meta: { sourceId: 'system' } }).catch(() => {
-          // Ignore errors during initial setup
-        });
+          // FluidNC does not support $PINSTATE; skip to avoid Error 3.
+          // this.sendCommand('$pinstate', { meta: { sourceId: 'system' } }).catch(() => {
+          //   // Ignore errors during initial setup
+          // });
+        } else {
+          // In Alarm state (e.g., ALARM:11 homing required), avoid sending $ commands that will be rejected.
+        }
 
         // Publish the first status report so clients receive an immediate connection indicator
         this.emit('data', trimmedData, null);
@@ -172,6 +178,7 @@ export class CNCController extends EventEmitter {
       // Parse alarm code from format: ALARM:1
       const alarmMatch = trimmedData.match(/alarm:(\d+)/i);
       const alarmCode = alarmMatch ? parseInt(alarmMatch[1]) : null;
+      this.lastSeenAlarmCode = alarmCode;
 
       this.handleCommandError({ code: 'ALARM', message: trimmedData });
       this.emit('cnc-error', {
@@ -407,8 +414,14 @@ export class CNCController extends EventEmitter {
           newStatus.mistCoolant = false;
         }
       } else if (key === 'Pn') {
-        // Pin state: P=Probe, X/Y/Z=Limit switches, etc.
-        newStatus.Pn = value || '';
+        // FluidNC reports probe/toolsetter as P0 / T0 in Pn
+        let v = value || '';
+        v = v.replace(/P0/g, 'P');
+        v = v.replace(/T0/g, 'T');
+        if (v.includes('T') && !v.includes('P')) {
+          v += 'P';
+        }
+        newStatus.Pn = v;
       } else if (key === 'P') {
         // Active probe input (grblHAL enhanced I/O monitoring)
         newStatus.activeProbe = parseInt(value, 10);
@@ -711,11 +724,11 @@ export class CNCController extends EventEmitter {
     this.emitConnectionStatus('verifying', false);
 
 
-    // Send soft-reset (required for grblHAL and FluidNC)
-    //log('Sending soft-reset to CNC controller...');
-    this.sendCommand('\x18', { meta: { sourceId: 'system' } }).catch(() => {
-       //Ignore errors during the initial soft-reset
-    });
+    // Soft-reset (Ctrl-X) can destabilize some hosts/firmware combinations on connect.
+    // For FluidNC, skip automatic Ctrl-X; user can issue it manually if needed.
+    // this.sendCommand('\x18', { meta: { sourceId: 'system' } }).catch(() => {
+    //   // Ignore errors during the initial soft-reset
+    // });
 
     // Kick off status polling
     this.startPolling();
@@ -1096,9 +1109,13 @@ export class CNCController extends EventEmitter {
       return { status: 'heartbeat-ack', id: resolvedCommandId };
     }
 
-    const cleanCommand = command.trim();
+    let cleanCommand = command.trim();
     if (!cleanCommand) {
       throw new Error('Command is empty');
+    }
+    const upperCmd = cleanCommand.toUpperCase();
+    if (upperCmd === '$X' && this.lastSeenAlarmCode === 11) {
+      cleanCommand = '$H';
     }
 
     // Same-tool detection moved to CommandProcessor (upstream)
@@ -1188,6 +1205,44 @@ export class CNCController extends EventEmitter {
       };
 
       this.emit('command-queued', pendingPayload);
+
+      const isAlarmState = (this.lastStatus?.status === 'Alarm') || (typeof this.rawData === 'string' && this.rawData.startsWith('<Alarm'));
+      const isHomingRequired = (this.lastSeenAlarmCode === 11) || (this.lastSeenAlarmCode == null && isAlarmState);
+      if (finalCommand === '\x18' && isHomingRequired) {
+        log('FluidNC: Translating Ctrl-X unlock to $H (homing required)');
+
+        const pendingAck = {
+          ...pendingPayload,
+          command: '$H',
+          displayCommand: '$H'
+        };
+        this.emit('command-queued', pendingAck);
+
+        try {
+          await this.writeToConnection('$H\n', {
+            rawCommand: '$H',
+            isRealTime: false
+          });
+
+          const ackPayload = {
+            ...pendingAck,
+            status: 'success',
+            timestamp: new Date().toISOString()
+          };
+          this.emit('command-ack', ackPayload);
+          return ackPayload;
+        } catch (error) {
+          const normalizedError = error instanceof Error ? error : new Error(String(error));
+          const ackPayload = {
+            ...pendingAck,
+            status: 'error',
+            error: normalizedError,
+            timestamp: new Date().toISOString()
+          };
+          this.emit('command-ack', ackPayload);
+          throw normalizedError;
+        }
+      }
 
       try {
         await this.writeToConnection(commandToSend, {
