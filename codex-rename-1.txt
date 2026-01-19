@@ -1,0 +1,116 @@
+CODEX — RENOMBRE TOTAL MFSENDER → MFSENDER (100% DEL REPO)
+PATH
+
+Repositorio:
+
+C:\mfsender-MF\mfsender-MF
+
+OBJETIVO (NO NEGOCIABLE)
+
+Eliminar toda referencia a mfsender en:
+
+nombres de carpetas
+
+nombres de archivos
+
+contenido interno de cada archivo (incluyendo binarios si contienen strings)
+
+assets (png/svg/ico/icns)
+
+docs, scripts, workflows, manifests
+
+Todo debe pasar a mfsender (según reglas de mayúsculas/minúsculas abajo).
+
+Resultado final: búsqueda global devuelve 0 matches de mfsender.
+
+REGLAS
+
+NO tocar nada fuera del repo. Todo cambio debe estar dentro de:
+
+C:\mfsender-MF\mfsender-MF
+
+
+NO introducir cambios funcionales: no refactors, no reestructurar lógica.
+Solo cambios de identidad/branding/paths/strings.
+
+Hacerlo paso a paso con checkpoint Git, y al final auditoría total.
+
+MAPA DE REEMPLAZO (CASE-SENSITIVE)
+
+Reemplazos de texto:
+
+mfsender → mfsender
+
+mfsender → mfsender
+
+MFsender → MFsender
+
+MFSENDER → MFSENDER
+
+Reemplazos de nombres (files/dirs):
+
+aplicar el mismo mapa anterior.
+
+PASO 0 — CHECKPOINT
+
+En PowerShell:
+
+cd C:\mfsender-MF\mfsender-MF
+git status
+git add -A
+git commit -m "checkpoint before total rename to mfsender"
+
+PASO 1 — RENOMBRAR ARCHIVOS Y DIRECTORIOS
+
+Renombrar TODO file/dir que contenga: mfsender, mfsender, MFsender, MFSENDER
+
+Hacerlo de rutas profundas a la raíz para evitar conflictos.
+
+PASO 2 — REEMPLAZO INTERNO EN TODO ARCHIVO
+
+Escanear cada archivo del repo y reemplazar texto con el mapa anterior.
+
+Incluye: .js .ts .vue .json .md .html .css .yml .yaml .cjs .mjs .txt .env .sh
+
+Incluye también assets: .svg .webmanifest .ico si contienen referencias/metadata.
+
+Para PNG/ICNS/ICO: si no contienen texto, solo asegurar que no haya nombres/paths referenciando mfsender.
+
+PASO 3 — AUDITORÍA TOTAL (DEBE DAR 0)
+
+Ejecutar:
+
+rg -n "mfsender|mfsender|MFsender|MFSENDER" .
+
+
+Si hay matches:
+
+listarlos
+
+corregirlos
+
+repetir auditoría hasta que sea 0
+
+PASO 4 — VERIFICACIÓN DE AISLAMIENTO
+
+Confirmar que:
+
+appId, productName, executableName, artifactName (en app/package.json) ya dicen mfsender.
+
+no queda ninguna ruta de userData con “mfsender”.
+
+PASO 5 — COMMIT FINAL
+
+Solo si auditoría = 0:
+
+git status
+git add -A
+git commit -m "Total rename: mfsender -> mfsender (identity/branding only)"
+
+SALIDA QUE DEBES REPORTARME
+
+Pégame:
+
+output del rg final (debe ser vacío)
+
+git status final
