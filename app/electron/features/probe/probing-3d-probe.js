@@ -204,7 +204,7 @@ export const getCenterInnerRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 X-${maxSearchLimit} F${searchFeed}`,
     `G0 X${bounce}`,
     `G38.2 X-3 F${slowFeed}`,
-    `#<X1> = #5061`,
+    `#<_X1> = #5061`,
     `G0 X${halfX}`
   );
 
@@ -216,8 +216,9 @@ export const getCenterInnerRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 X${maxSearchLimit} F${searchFeed}`,
     `G0 X-${bounce}`,
     `G38.2 X3 F${slowFeed}`,
-    `#<X2> = #5061`,
-    'G0 X-[[#<X2>-#<X1>]/2]'
+    `#<_X2> = #5061`,
+    "#<_XSHIFT>=[[#<_X2>-#<_X1>]/2]",
+    "G0 X[-#<_XSHIFT>]"
   );
 
   if (safeRapidY > 0) {
@@ -228,7 +229,7 @@ export const getCenterInnerRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 Y-${maxSearchLimit} F${searchFeed}`,
     `G0 Y${bounce}`,
     `G38.2 Y-3 F${slowFeed}`,
-    `#<Y1> = #5062`,
+    `#<_Y1> = #5062`,
     `G0 Y${halfY}`
   );
 
@@ -240,8 +241,9 @@ export const getCenterInnerRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 Y${maxSearchLimit} F${searchFeed}`,
     `G0 Y-${bounce}`,
     `G38.2 Y3 F${slowFeed}`,
-    `#<Y2> = #5062`,
-    `G0 Y-[[#<Y2>-#<Y1>]/2]`,
+    `#<_Y2> = #5062`,
+    `#<_YSHIFT>=[[#<_Y2>-#<_Y1>]/2]`,
+    `G0 Y[-#<_YSHIFT>]`,
     'G10 L20 X0 Y0',
     `G0 Z${zPlunge+4}`,
     'G90',
@@ -289,7 +291,7 @@ export const getCenterOuterRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 X${maxSearchLimit} F${searchFeed}`,
     `G0 X-${bounce}`,
     `G38.2 X${bounce+1} F${slowFeed}`,
-    `#<X1> = #5061`,
+    `#<_X1> = #5061`,
     `G0 X-${bounce}`,
     `G0 Z${zHop}`,
     `G0 X${bounce}`,
@@ -305,11 +307,12 @@ export const getCenterOuterRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 X-${maxSearchLimit} F${searchFeed}`,
     `G0 X${bounce}`,
     `G38.2 X-${bounce+1} F${slowFeed}`,
-    `#<X2> = #5061`,
+    `#<_X2> = #5061`,
     `G0 X${bounce}`,
     `G0 Z${zHop}`,
     `G0 X-${bounce}`,
-    'G0 X-[[#<X2>-#<X1>]/2]'
+    "#<_XSHIFT>=[[#<_X2>-#<_X1>]/2]",
+    "G0 X[-#<_XSHIFT>]"
   );
 
   if (safeRapidY > 0) {
@@ -321,7 +324,7 @@ export const getCenterOuterRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 Y${maxSearchLimit} F${searchFeed}`,
     `G0 Y-${bounce}`,
     `G38.2 Y+${bounce+1} F${slowFeed}`,
-    `#<Y1> = #5062`,
+    `#<_Y1> = #5062`,
     `G0 Y-${bounce}`,
     `G0 Z${zHop}`,
     `G0 Y${bounce}`,
@@ -337,11 +340,12 @@ export const getCenterOuterRoutine = ({ xDimension, yDimension, toolDiameter = 2
     `G38.2 Y-${maxSearchLimit} F${searchFeed}`,
     `G0 Y${bounce}`,
     `G38.2 Y-${bounce+1} F${slowFeed}`,
-    `#<Y2> = #5062`,
+    `#<_Y2> = #5062`,
     `G0 Y${bounce}`,
     `G0 Z${zHop}`,
     `G0 Y-${bounce}`,
-    `G0 Y-[[#<Y2>-#<Y1>]/2]`,
+    `#<_YSHIFT>=[[#<_Y2>-#<_Y1>]/2]`,
+    `G0 Y[-#<_YSHIFT>]`,
     'G10 L20 X0 Y0',
     'G90',
     'G[#<return_units>]'
