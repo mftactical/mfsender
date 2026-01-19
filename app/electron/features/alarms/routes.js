@@ -23,6 +23,9 @@ import { createLogger } from '../../core/logger.js';
 
 const { log, error: logError } = createLogger('Alarms');
 
+// Disable GRBL $EA alarm-code fetch after we learn the controller doesn't support it
+let _disableEA = true;
+
 function getUserDataDir() {
   const platform = os.platform();
   const appName = 'mfsender';
@@ -95,19 +98,41 @@ async function fetchAlarmCodesFromController(cncController) {
     // Listen for response
     cncController.on('data', dataListener);
 
-    // Send $EA command
-    cncController.sendCommand('$EA', { meta: { sourceId: 'system' } }).then(() => {
-      // Wait a bit for all responses
-      setTimeout(() => {
-        clearTimeout(timeout);
-        cncController.off('data', dataListener);
-        resolve(alarmCodes);
-      }, 1000);
-    }).catch((error) => {
+    // If we've already learned this controller doesn't support $EA, skip quietly.
+    if (_disableEA) {
       clearTimeout(timeout);
       cncController.off('data', dataListener);
-      reject(error);
-    });
+      resolve({});
+      return;
+    }
+
+    // Send $EA command
+    cncController
+      .sendCommand('$EA', { meta: { sourceId: 'system' } })
+      .then(() => {
+        // Wait a bit for all responses
+        setTimeout(() => {
+          clearTimeout(timeout);
+          cncController.off('data', dataListener);
+          resolve(alarmCodes);
+        }, 1000);
+      })
+      .catch((error) => {
+        const msg = String(error?.message || error);
+
+        // FluidNC (and some others) reject GRBL '$' system commands; disable $EA for this session.
+        if (msg.includes("Grbl '$' system command was not recognized or supported")) {
+          _disableEA = true;
+          clearTimeout(timeout);
+          cncController.off('data', dataListener);
+          resolve({});
+          return;
+        }
+
+        clearTimeout(timeout);
+        cncController.off('data', dataListener);
+        reject(error);
+      });
   });
 }
 
@@ -123,6 +148,13 @@ export async function fetchAndSaveAlarmCodes(cncController) {
   try {
     log('Fetching alarm codes from controller...');
     const alarmCodes = await fetchAlarmCodesFromController(cncController);
+
+    // Avoid caching an empty object (e.g., controller doesn't support $EA)
+    if (!alarmCodes || Object.keys(alarmCodes).length === 0) {
+      log('Controller did not provide alarm codes; skipping cache write');
+      return alarmCodes;
+    }
+
     writeAlarmsFile(alarmCodes);
     log('Alarm codes fetched and saved successfully');
     return alarmCodes;
