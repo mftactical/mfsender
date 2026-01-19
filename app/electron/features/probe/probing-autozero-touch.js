@@ -132,7 +132,8 @@ const buildAxisProbeSequence = ({
       `G38.2 ${axisUpper}${-(BOUNCE + 1) * directionSign} F75`,
       WAIT_COMMAND,
       `#<${axisUpper}2> = ${axisRegister}`,
-      `G0 ${axisUpper}[[#<${axisUpper}1>-#<${axisUpper}2>]/2]`
+      `#<_${axisUpper}SHIFT>=[[#<${axisUpper}1>-#<${axisUpper}2>]/2]`,
+      `G0 ${axisUpper}[-#<_${axisUpper}SHIFT>]`
     );
   }
 
