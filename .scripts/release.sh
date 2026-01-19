@@ -56,7 +56,7 @@ if git rev-list "$LATEST_TAG..HEAD" --count | grep -q "^0$"; then
 
     echo ""
     echo "✅ Successfully created and pushed $NEW_TAG"
-    echo "CI pipeline will build the release at: https://github.com/siganberg/ncSender/actions"
+    echo "CI pipeline will build the release at: https://github.com/siganberg/mfsender/actions"
     exit 0
 
     # else
@@ -180,7 +180,7 @@ git push origin "$NEW_TAG"
 
 echo ""
 echo "✅ Successfully created and pushed $NEW_TAG"
-echo "CI pipeline will build the release at: https://github.com/siganberg/ncSender/actions"
+echo "CI pipeline will build the release at: https://github.com/siganberg/mfsender/actions"
 
 # else
 #     # Revert the changes

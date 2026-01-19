@@ -26,7 +26,7 @@ NC='\033[0m' # No Color
 RELEASES_DIR="releases"
 APP_DIR="app"
 
-echo -e "${BLUE}🔨 ncSender Local Build Script${NC}"
+echo -e "${BLUE}🔨 mfsender Local Build Script${NC}"
 echo ""
 
 # Parse arguments

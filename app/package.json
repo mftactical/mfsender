@@ -3,10 +3,7 @@
   "version": "0.3.134",
   "description": "mfsender - Unified CNC Controller Electron App",
   "homepage": "https://github.com/siganberg/mfsender",
-  "author": {
-    "name": "Francis Marasigan",
-    "email": "support@franciscreation.com"
-  },
+  "author": "Jose Aguilo",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
@@ -51,8 +48,12 @@
     "electron-icon-builder": "^2.0.1"
   },
   "build": {
-    "appId": "com.mfsender.app",
+    "appId": "com.mftactical.mfsender",
     "productName": "mfsender",
+    "executableName": "mfsender",
+    "artifactName": "mfsender Setup ${version}.exe",
+    "copyright": "© Jose Aguilo",
+    "icon": "assets/icon.ico",
     "publish": [
       {
         "provider": "github",
@@ -80,7 +81,8 @@
       ]
     },
     "win": {
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "legalTrademarks": "MF Tactical"
     },
     "linux": {
       "icon": "assets/icons",

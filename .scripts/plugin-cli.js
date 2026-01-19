@@ -13,13 +13,13 @@ const __dirname = path.dirname(__filename);
 const COMMANDS = {
   create: 'Create a new plugin from template',
   build: 'Build a plugin into a .zip file',
-  install: 'Install a plugin to ncSender',
+  install: 'Install a plugin to mfsender',
   list: 'List installed plugins',
   help: 'Show this help message'
 };
 
 function showHelp() {
-  console.log('\n🧩 ncSender Plugin CLI\n');
+  console.log('\n🧩 mfsender Plugin CLI\n');
   console.log('Usage: node plugin-cli.js <command> [options]\n');
   console.log('Commands:');
   Object.entries(COMMANDS).forEach(([cmd, desc]) => {
@@ -38,13 +38,13 @@ function getUserDataDir() {
 
   switch (platform) {
     case 'darwin':
-      return path.join(home, 'Library', 'Application Support', 'ncSender');
+      return path.join(home, 'Library', 'Application Support', 'mfsender');
     case 'win32':
-      return path.join(home, 'AppData', 'Roaming', 'ncSender');
+      return path.join(home, 'AppData', 'Roaming', 'mfsender');
     case 'linux':
-      return path.join(home, '.config', 'ncSender');
+      return path.join(home, '.config', 'mfsender');
     default:
-      return path.join(home, '.ncSender');
+      return path.join(home, '.mfsender');
   }
 }
 
@@ -55,7 +55,7 @@ async function createPlugin(pluginName) {
     process.exit(1);
   }
 
-  const pluginId = pluginName.includes('.') ? pluginName : `com.ncsender.${pluginName}`;
+  const pluginId = pluginName.includes('.') ? pluginName : `com.mfsender.${pluginName}`;
   const pluginDir = path.join(process.cwd(), 'plugins', pluginId);
 
   if (fs.existsSync(pluginDir)) {
@@ -72,7 +72,7 @@ async function createPlugin(pluginName) {
     name: pluginName.split('.').pop().replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     version: '1.0.0',
     author: 'Your Name',
-    description: 'A new ncSender plugin',
+    description: 'A new mfsender plugin',
     entry: 'index.js',
     events: ['onBeforeJobStart'],
     permissions: []
@@ -193,7 +193,7 @@ async function buildPlugin(pluginName) {
     process.exit(1);
   }
 
-  const pluginId = pluginName.includes('.') ? pluginName : `com.ncsender.${pluginName}`;
+  const pluginId = pluginName.includes('.') ? pluginName : `com.mfsender.${pluginName}`;
   const pluginDir = path.join(process.cwd(), 'plugins', pluginId);
 
   if (!fs.existsSync(pluginDir)) {
@@ -241,7 +241,7 @@ async function installPlugin(pluginName) {
     process.exit(1);
   }
 
-  const pluginId = pluginName.includes('.') ? pluginName : `com.ncsender.${pluginName}`;
+  const pluginId = pluginName.includes('.') ? pluginName : `com.mfsender.${pluginName}`;
   const zipFile = path.join(process.cwd(), 'plugins', `${pluginId}.zip`);
 
   if (!fs.existsSync(zipFile)) {

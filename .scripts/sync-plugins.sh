@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Sync development plugins from repo to application data directory
-# This script copies plugins from the ncSender.plugins/ directory to the user's ncSender data folder
+# This script copies plugins from the mfsender.plugins/ directory to the user's mfsender data folder
 
 # Determine the platform-specific plugins directory
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    PLUGINS_DIR="$HOME/Library/Application Support/ncSender/plugins"
+    PLUGINS_DIR="$HOME/Library/Application Support/mfsender/plugins"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    PLUGINS_DIR="$HOME/.config/ncSender/plugins"
+    PLUGINS_DIR="$HOME/.config/mfsender/plugins"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    PLUGINS_DIR="$APPDATA/ncSender/plugins"
+    PLUGINS_DIR="$APPDATA/mfsender/plugins"
 else
     echo "Unsupported platform: $OSTYPE"
     exit 1
@@ -17,11 +17,11 @@ fi
 
 # Get the script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Use DEV_PLUGINS_DIR env variable if set, otherwise fall back to sibling ncSender.plugins directory
-SOURCE_PLUGINS_DIR="${DEV_PLUGINS_DIR:-$(dirname "$SCRIPT_DIR")/ncSender.plugins}"
+# Use DEV_PLUGINS_DIR env variable if set, otherwise fall back to sibling mfsender.plugins directory
+SOURCE_PLUGINS_DIR="${DEV_PLUGINS_DIR:-$(dirname "$SCRIPT_DIR")/mfsender.plugins}"
 
 # Default port
-PORT="${NCSENDER_PORT:-8090}"
+PORT="${mfsender_PORT:-8090}"
 
 echo "Syncing plugins from: $SOURCE_PLUGINS_DIR"
 echo "                  to: $PLUGINS_DIR"
@@ -58,12 +58,12 @@ if [ -d "$SOURCE_PLUGINS_DIR" ]; then
     echo ""
     echo "✓ All plugins synced successfully"
 else
-    echo "Error: ncSender.plugins/ directory not found in project root"
+    echo "Error: mfsender.plugins/ directory not found in project root"
     exit 1
 fi
 
 # Update plugins.json registry
-REGISTRY_FILE="$HOME/Library/Application Support/ncSender/plugins.json"
+REGISTRY_FILE="$HOME/Library/Application Support/mfsender/plugins.json"
 
 if [ ! -f "$REGISTRY_FILE" ]; then
     echo "Creating plugins.json registry..."
@@ -84,11 +84,11 @@ for plugin_id in "${SYNCED_PLUGINS[@]}"; do
     if [[ $? -eq 0 && "$reload_response" == *"success"* ]]; then
         echo "  ✓ $plugin_id reloaded"
     elif [[ "$register_response" == *"success"* ]]; then
-        echo "  ✓ $plugin_id registered (restart ncSender to load)"
+        echo "  ✓ $plugin_id registered (restart mfsender to load)"
     else
         echo "  ⨯ $plugin_id could not be loaded (server may not be running)"
     fi
 done
 
 echo ""
-echo "Note: If this is the first time loading plugins, restart ncSender to load them"
+echo "Note: If this is the first time loading plugins, restart mfsender to load them"

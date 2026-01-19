@@ -15,7 +15,7 @@
  * along with mfsender. If not, see <https://www.gnu.org/licenses/>.
  */
 
-interface NcSenderAPI {
+interface mfsenderAPI {
   theme: {
     shouldUseDark: () => boolean;
   };
@@ -24,7 +24,7 @@ interface NcSenderAPI {
 
 declare global {
   interface Window {
-    mfsender?: NcSenderAPI;
+    mfsender?: mfsenderAPI;
   }
 }
 
@@ -47,7 +47,7 @@ interface UpdateProgressPayload {
   channel?: string;
 }
 
-interface NcSenderUpdatesAPI {
+interface mfsenderUpdatesAPI {
   checkForUpdates: () => Promise<any>;
   downloadUpdate: (options?: { install?: boolean }) => Promise<any>;
   installUpdate: () => Promise<any>;
@@ -60,11 +60,11 @@ interface NcSenderUpdatesAPI {
   onDownloaded: (callback: (payload: UpdateAvailablePayload & { downloadedAt?: string }) => void) => () => void;
 }
 
-interface NcSenderAPI {
+interface mfsenderAPI {
   theme: {
     shouldUseDark: () => boolean;
   };
-  updates?: NcSenderUpdatesAPI;
+  updates?: mfsenderUpdatesAPI;
 }
 
 export {};

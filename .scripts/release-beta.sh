@@ -95,7 +95,7 @@ FULL_NOTES="⚠️ **Beta Release** - This version is for testing purposes only.
 $RELEASE_NOTES
 
 ---
-*Please report any issues on [GitHub Issues](https://github.com/siganberg/ncSender/issues)*"
+*Please report any issues on [GitHub Issues](https://github.com/siganberg/mfsender/issues)*"
 
 # Save to latest_release.md file
 RELEASE_NOTES_FILE="latest_release.md"
@@ -124,4 +124,4 @@ git push origin "$NEW_TAG"
 
 echo ""
 echo "✅ Successfully created and pushed beta $NEW_TAG"
-echo "CI pipeline will build the beta release at: https://github.com/siganberg/ncSender/actions"
+echo "CI pipeline will build the beta release at: https://github.com/siganberg/mfsender/actions"

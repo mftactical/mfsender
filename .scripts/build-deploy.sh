@@ -8,6 +8,6 @@ rm -rf releases/pi/*.deb
 ./.scripts/build-pi.sh
 
 # Copy and install on the remote Pi
-ssh ncsender@altfinity "rm -f ~/Downloads/*.deb" && \
-scp releases/pi/*.deb ncsender@altfinity:~/Downloads/ && \
-ssh ncsender@altfinity "sudo dpkg -i ~/Downloads/*.deb"
+ssh mfsender@altfinity "rm -f ~/Downloads/*.deb" && \
+scp releases/pi/*.deb mfsender@altfinity:~/Downloads/ && \
+ssh mfsender@altfinity "sudo dpkg -i ~/Downloads/*.deb"

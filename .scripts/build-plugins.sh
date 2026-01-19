@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Build plugin ZIP files for distribution
-# This script creates ZIP archives of plugins from the ncSender.plugins/ directory
+# This script creates ZIP archives of plugins from the mfsender.plugins/ directory
 
 # Get the script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_PLUGINS_DIR="$(dirname "$SCRIPT_DIR")/ncSender.plugins"
+SOURCE_PLUGINS_DIR="$(dirname "$SCRIPT_DIR")/mfsender.plugins"
 BUILD_DIR="$SCRIPT_DIR/dist/plugins"
 
 echo "Building plugin ZIP files..."
@@ -72,6 +72,6 @@ if [ -d "$SOURCE_PLUGINS_DIR" ]; then
         done
     fi
 else
-    echo "Error: ncSender.plugins/ directory not found in project root"
+    echo "Error: mfsender.plugins/ directory not found in project root"
     exit 1
 fi

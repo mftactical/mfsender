@@ -14,7 +14,7 @@ const pluginDirs = process.argv.slice(2);
 
 if (pluginDirs.length === 0) {
   console.error('Usage: node reload-plugin.mjs <plugin-dir> [<plugin-dir> ...]');
-  console.error('Example: node reload-plugin.mjs com.ncsender.toolbench');
+  console.error('Example: node reload-plugin.mjs com.mfsender.toolbench');
   process.exit(1);
 }
 

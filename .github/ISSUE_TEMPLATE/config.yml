@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: ncSender Discussions
-    url: https://github.com/siganberg/ncSender/discussions
+  - name: mfsender Discussions
+    url: https://github.com/siganberg/mfsender/discussions
     about: Ask questions, share ideas, and get community support here before filing an issue.

@@ -227,12 +227,12 @@ jobs:
           if [ -d "artifacts/macos-artifacts" ]; then
             for file in artifacts/macos-artifacts/*arm64*.dmg; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_macos_arm64.dmg"
+                cp "$file" "release-assets/mfsender_${TAG}_macos_arm64.dmg"
               fi
             done
             for file in artifacts/macos-artifacts/*.dmg; do
               if [ -f "$file" ] && [[ "$file" != *arm64* ]]; then
-                cp "$file" "release-assets/ncSender_${TAG}_macos_x64.dmg"
+                cp "$file" "release-assets/mfsender_${TAG}_macos_x64.dmg"
               fi
             done
             # Beta channel manifest
@@ -247,17 +247,17 @@ jobs:
           if [ -d "artifacts/windows-x64-artifacts" ]; then
             for file in artifacts/windows-x64-artifacts/*.exe; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_windows_x64.exe"
+                cp "$file" "release-assets/mfsender_${TAG}_windows_x64.exe"
               fi
             done
             for file in artifacts/windows-x64-artifacts/*.msi; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_windows_x64.msi"
+                cp "$file" "release-assets/mfsender_${TAG}_windows_x64.msi"
               fi
             done
             for file in artifacts/windows-x64-artifacts/*.zip; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_windows_x64.zip"
+                cp "$file" "release-assets/mfsender_${TAG}_windows_x64.zip"
               fi
             done
             # Beta channel manifest
@@ -274,12 +274,12 @@ jobs:
           if [ -d "artifacts/linux-x64-artifacts" ]; then
             for file in artifacts/linux-x64-artifacts/*.AppImage; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_linux_x64.AppImage"
+                cp "$file" "release-assets/mfsender_${TAG}_linux_x64.AppImage"
               fi
             done
             for file in artifacts/linux-x64-artifacts/*.deb; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_linux_x64.deb"
+                cp "$file" "release-assets/mfsender_${TAG}_linux_x64.deb"
               fi
             done
           fi
@@ -288,12 +288,12 @@ jobs:
           if [ -d "artifacts/linux-arm64-artifacts" ]; then
             for file in artifacts/linux-arm64-artifacts/*.AppImage; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_linux_arm64.AppImage"
+                cp "$file" "release-assets/mfsender_${TAG}_linux_arm64.AppImage"
               fi
             done
             for file in artifacts/linux-arm64-artifacts/*.deb; do
               if [ -f "$file" ]; then
-                cp "$file" "release-assets/ncSender_${TAG}_linux_arm64.deb"
+                cp "$file" "release-assets/mfsender_${TAG}_linux_arm64.deb"
               fi
             done
           fi
@@ -313,11 +313,11 @@ jobs:
 
           # Rewrite Linux updater manifests to match renamed asset filenames
           if [ -f "release-assets/beta-linux.yml" ]; then
-            VERSION="${VERSION}" TAG="${TAG}" python3 -c "from pathlib import Path; import os; path = Path('release-assets/beta-linux.yml'); text = path.read_text(); version = os.environ['VERSION']; tag = os.environ['TAG']; text = text.replace(f'ncSender-{version}.AppImage', f'ncSender_{tag}_linux_x64.AppImage'); text = text.replace(f'ncsender_{version}_amd64.deb', f'ncSender_{tag}_linux_x64.deb'); path.write_text(text)"
+            VERSION="${VERSION}" TAG="${TAG}" python3 -c "from pathlib import Path; import os; path = Path('release-assets/beta-linux.yml'); text = path.read_text(); version = os.environ['VERSION']; tag = os.environ['TAG']; text = text.replace(f'mfsender-{version}.AppImage', f'mfsender_{tag}_linux_x64.AppImage'); text = text.replace(f'mfsender_{version}_amd64.deb', f'mfsender_{tag}_linux_x64.deb'); path.write_text(text)"
           fi
 
           if [ -f "release-assets/beta-linux-arm64.yml" ]; then
-            VERSION="${VERSION}" TAG="${TAG}" python3 -c "from pathlib import Path; import os; path = Path('release-assets/beta-linux-arm64.yml'); text = path.read_text(); version = os.environ['VERSION']; tag = os.environ['TAG']; text = text.replace(f'ncSender-{version}-arm64.AppImage', f'ncSender_{tag}_linux_arm64.AppImage'); text = text.replace(f'ncsender_{version}_arm64.deb', f'ncSender_{tag}_linux_arm64.deb'); path.write_text(text)"
+            VERSION="${VERSION}" TAG="${TAG}" python3 -c "from pathlib import Path; import os; path = Path('release-assets/beta-linux-arm64.yml'); text = path.read_text(); version = os.environ['VERSION']; tag = os.environ['TAG']; text = text.replace(f'mfsender-{version}-arm64.AppImage', f'mfsender_{tag}_linux_arm64.AppImage'); text = text.replace(f'mfsender_{version}_arm64.deb', f'mfsender_{tag}_linux_arm64.deb'); path.write_text(text)"
           fi
 
           echo "Release assets to upload:"

@@ -2,7 +2,7 @@
 
 /**
  * Watch the `plugins/` directory and run the sync script when files change.
- * This keeps the development plugins in the ncSender data directory up-to-date
+ * This keeps the development plugins in the mfsender data directory up-to-date
  * while you're iterating locally.
  */
 

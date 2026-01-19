@@ -1,5 +1,5 @@
 name: "Bug report"
-description: "Report a reproducible problem with ncSender"
+description: "Report a reproducible problem with mfsender"
 labels:
   - bug
   - needs-triage
@@ -41,7 +41,7 @@ body:
       label: Steps to reproduce
       description: Provide a numbered list of steps that consistently trigger the problem.
       placeholder: |
-        1. Launch ncSender v0.1.7 on macOS 13.4
+        1. Launch mfsender v0.1.7 on macOS 13.4
         2. Connect to Shapeoko 3
         3. Click Home (HZ) and wait until complete
         4. Try to jog the X axis
@@ -65,10 +65,10 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Include operating system, ncSender version/build, controller firmware, and connection type.
+      description: Include operating system, mfsender version/build, controller firmware, and connection type.
       placeholder: |
         - OS: Windows 11 22H2
-        - ncSender: v0.1.7 (commit abc123)
+        - mfsender: v0.1.7 (commit abc123)
         - Controller: GRBL 1.1h on Shapeoko 3
         - Connection: USB @ 115200
     validations:
@@ -98,7 +98,7 @@ body:
         - Minor inconvenience
         - Workaround available
         - Blocks key workflow
-        - Prevents ncSender usage entirely
+        - Prevents mfsender usage entirely
     validations:
       required: true
   - type: checkboxes

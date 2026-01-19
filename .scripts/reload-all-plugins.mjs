@@ -15,7 +15,7 @@ const serverUrl = process.env.SERVER_URL || 'http://localhost:8090';
 // Discover all plugin directories
 const pluginDirs = readdirSync(DEV_PLUGINS_DIR, { withFileTypes: true })
   .filter(dirent => dirent.isDirectory())
-  .filter(dirent => dirent.name.startsWith('com.ncsender.'))
+  .filter(dirent => dirent.name.startsWith('com.mfsender.'))
   .map(dirent => dirent.name);
 
 if (pluginDirs.length === 0) {
