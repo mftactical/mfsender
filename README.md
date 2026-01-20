@@ -15,7 +15,7 @@ Apparently, the more I build features, the more tokens I burn. Send help (or cof
 
 
 
-# mfsender — Simple, Fast G‑Code Sender for GrblHAL
+# mfsender — Simple, Fast G‑Code Sender for Fluidnc
 
 mfsender is a lightweight, cross‑platform CNC controller with a clean UI and built‑in 3D toolpath preview. It connects to GrblHAL controllers over USB serial or Ethernet and can run either as a desktop app (Electron) or as a small local server you access from any browser on your network.
 
