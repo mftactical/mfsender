@@ -460,6 +460,7 @@ export class CNCController extends EventEmitter {
     if (prevStatus === 'Home' && currStatus === 'Idle') {
       // Homing just completed - machine transitioned from Home to Idle
       newStatus.homed = true;
+      this.lastStatus.homed = true;
       log('Homing detected via status transition (Home → Idle)');
     }
 
