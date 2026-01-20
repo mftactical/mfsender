@@ -2,7 +2,7 @@
 
 ## 💬 Join the Community
 
-[![Join Discord](https://img.shields.io/badge/Join_our_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/qpKzpmYD)
+
 
 Get help, share tips, and stay updated on mfsender news.
 
@@ -64,11 +64,6 @@ Download a release from the
 
 ## 🎥 Video Guide Playlist
 
-Check out the full video guide on YouTube:
-
-[![Video Guide Playlist](https://img.youtube.com/vi/FKzFe8b-NkY/0.jpg)](https://www.youtube.com/watch?v=FKzFe8b-NkY&list=PL7x16nytZHiPXI6EPsmamY8EM6uo82eLs)
-
-📺 [Watch the full playlist here »](https://www.youtube.com/playlist?list=PL7x16nytZHiPXI6EPsmamY8EM6uo82eLs)
 
 ## 🚀 Quick Start
 1) Connect your controller
@@ -147,6 +142,6 @@ You are free to use, modify, and distribute this software under GPL-3.0 terms, p
 ### Commercial License
 For commercial use, proprietary applications, or if you cannot comply with GPL-3.0 requirements, a commercial license is available.
 
-Contact: support@franciscreation.com
+Contact: 
 
 See the [LICENSE](LICENSE) file for full details.
