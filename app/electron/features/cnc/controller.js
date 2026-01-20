@@ -29,6 +29,7 @@ import { createLogger } from '../../core/logger.js';
 const { log, error: logError } = createLogger('CNCController');
 
 const MAX_QUEUE_SIZE = 200;
+const INITIAL_CONFIG_COMMANDS = new Set(['$G', '$$', '$I', '$EG', '$ES', '$ESH']);
 
 // Fields to track for change logging
 // Excludes frequently changing fields like MPos, feedRate, Bf, Ln, WCO
@@ -86,6 +87,12 @@ export class CNCController extends EventEmitter {
     this.lastDisconnectLog = 0;
     this.connectionErrorThrottleMs = 30000; // Log connection errors max once per 30 seconds
     this.lastSeenAlarmCode = null;
+
+    // Track initial config fetch to delay homing until config is read
+    this.initialConfigPending = false;
+    this.initialConfigStarted = false;
+    this.pendingConfigCommands = new Set();
+    this.deferredHomingCommand = null;
   }
 
   emitConnectionStatus(status, isConnected = this.isConnected) {
@@ -257,6 +264,18 @@ export class CNCController extends EventEmitter {
 
     if (cmd.rawCommand && cmd.rawCommand.toLowerCase() === '$x') {
       this.emit('unlock');
+    }
+
+    if (this.initialConfigPending && cmd.meta?.sourceId === 'system') {
+      const upperCommand = cmd.rawCommand ? cmd.rawCommand.toUpperCase() : '';
+      if (INITIAL_CONFIG_COMMANDS.has(upperCommand)) {
+        this.pendingConfigCommands.delete(upperCommand);
+        if (this.initialConfigStarted && this.pendingConfigCommands.size === 0) {
+          this.initialConfigPending = false;
+          this.initialConfigStarted = false;
+          this.flushDeferredHoming();
+        }
+      }
     }
 
     // Track M64/M65 output pin state changes
@@ -723,6 +742,11 @@ export class CNCController extends EventEmitter {
     this.greetingMessage = null;
     this.emitConnectionStatus('verifying', false);
 
+    this.initialConfigPending = true;
+    this.initialConfigStarted = false;
+    this.pendingConfigCommands = new Set();
+    this.deferredHomingCommand = null;
+
 
     // Soft-reset (Ctrl-X) can destabilize some hosts/firmware combinations on connect.
     // For FluidNC, skip automatic Ctrl-X; user can issue it manually if needed.
@@ -745,6 +769,10 @@ export class CNCController extends EventEmitter {
     this.isVerifyingConnection = false;
     this.hasReceivedFirstStatus = false;
     this.greetingMessage = null;
+    this.initialConfigPending = false;
+    this.initialConfigStarted = false;
+    this.pendingConfigCommands = new Set();
+    this.deferredHomingCommand = null;
 
     this.flushQueue(`${type}-close`);
     this.emitConnectionStatus('disconnected', false);
@@ -965,6 +993,10 @@ export class CNCController extends EventEmitter {
       this.isVerifyingConnection = false;
       this.hasReceivedFirstStatus = false;
       this.greetingMessage = null;
+      this.initialConfigPending = false;
+      this.initialConfigStarted = false;
+      this.pendingConfigCommands = new Set();
+      this.deferredHomingCommand = null;
       this.emitConnectionStatus('cancelled', false);
     }
   }
@@ -1016,7 +1048,54 @@ export class CNCController extends EventEmitter {
     this.isVerifyingConnection = false;
     this.hasReceivedFirstStatus = false;
     this.greetingMessage = null;
+    this.initialConfigPending = false;
+    this.initialConfigStarted = false;
+    this.pendingConfigCommands = new Set();
+    this.deferredHomingCommand = null;
     this.emitConnectionStatus('disconnected', false);
+  }
+
+  deferHomingCommand(command, options) {
+    if (this.deferredHomingCommand) {
+      return this.deferredHomingCommand.promise;
+    }
+
+    let resolve;
+    let reject;
+    const promise = new Promise((innerResolve, innerReject) => {
+      resolve = innerResolve;
+      reject = innerReject;
+    });
+
+    this.deferredHomingCommand = {
+      command,
+      options,
+      resolve,
+      reject,
+      promise
+    };
+
+    return promise;
+  }
+
+  async flushDeferredHoming() {
+    if (!this.deferredHomingCommand) {
+      return;
+    }
+
+    const { command, options, resolve, reject } = this.deferredHomingCommand;
+    this.deferredHomingCommand = null;
+
+    const meta = options?.meta && typeof options.meta === 'object'
+      ? { ...options.meta, deferredHoming: true }
+      : { deferredHoming: true };
+
+    try {
+      const result = await this.sendCommand(command, { ...options, meta });
+      resolve(result);
+    } catch (error) {
+      reject(error);
+    }
   }
 
   async sendEmergencyJogCancel(reason) {
@@ -1122,6 +1201,15 @@ export class CNCController extends EventEmitter {
     // Commands are pre-processed by CommandProcessor → Plugin Manager before reaching controller
     // Door state safety check is also handled in CommandProcessor
     const finalCommand = cleanCommand;
+    const isHomingCommand = /^\$H/.test(upperCmd);
+    const shouldDeferHoming = isHomingCommand &&
+      this.initialConfigPending &&
+      !normalizedMeta?.deferredHoming;
+
+    if (shouldDeferHoming) {
+      log('Deferring homing until initial config fetch completes.');
+      return this.deferHomingCommand(command, options);
+    }
 
     // Intercept user ? command - return cached status instead of sending to controller
     // But allow polling (sourceId: 'system') to go through
@@ -1283,6 +1371,12 @@ export class CNCController extends EventEmitter {
     const hasVariableSyntax = finalCommand.startsWith('%') || /\[.*\]/.test(finalCommand);
     const normalizedCommand = hasVariableSyntax ? finalCommand : finalCommand.toUpperCase();
     const display = displayCommand || finalCommand;
+
+    if (this.initialConfigPending && normalizedMeta?.sourceId === 'system' &&
+        INITIAL_CONFIG_COMMANDS.has(normalizedCommand)) {
+      this.initialConfigStarted = true;
+      this.pendingConfigCommands.add(normalizedCommand);
+    }
 
     // Skip tool change commands when tool.count is 0 or not configured
     const isToolChange = /M6(?!\d)/i.test(normalizedCommand);
