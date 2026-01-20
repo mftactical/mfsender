@@ -27,6 +27,7 @@ export const loadTexture = (url) => new Promise((resolve) => {
 
 export const generateCuttingPointer = () => {
     const group = new THREE.Group();
+    const LOGO_MATERIAL_NAME = '1.000000_1.000000_1.000000_0.000000_0.000000';
 
     // Get accent color from CSS variable
     const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#1abc9c';
@@ -63,10 +64,13 @@ export const generateCuttingPointer = () => {
                     obj.traverse((child) => {
                         if (child.isMesh) {
                             meshes.push(child);
+                            const mats = Array.isArray(child.material) ? child.material : [child.material];
+                            if (mats.some((m) => m && m.name === LOGO_MATERIAL_NAME)) {
+                                child.visible = false;
+                            }
                             // Keep original material, add transparency and metallic properties
                             if (child.material) {
                                 // Handle single or array materials
-                                const mats = Array.isArray(child.material) ? child.material : [child.material];
                                 mats.forEach((m) => {
                                     m.transparent = true;
                                     m.opacity = 1;
