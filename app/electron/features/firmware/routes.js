@@ -393,6 +393,7 @@ export async function initializeFirmwareOnConnection(cncController, force = fals
     }
 
     log('Firmware version:', currentVersion);
+    const isFluidNC = currentVersion.toLowerCase().includes('fluidnc');
 
     // Check if firmware.json exists and version matches
     let needsStructureUpdate = force; // Force refresh bypasses version check
@@ -420,7 +421,7 @@ export async function initializeFirmwareOnConnection(cncController, force = fals
     }
 
     // Query firmware structure if needed
-    if (needsStructureUpdate) {
+    if (needsStructureUpdate && !isFluidNC) {
       log('Querying firmware structure ($EG, $ES, $ESH)...');
       const { groups, settings, halSettings } = await queryFirmwareStructure(cncController);
 
@@ -450,6 +451,8 @@ export async function initializeFirmwareOnConnection(cncController, force = fals
       await ensureDataDirectory();
       await fs.writeFile(FIRMWARE_FILE_PATH, JSON.stringify(firmwareData, null, 2), 'utf8');
       log('Firmware structure saved to firmware.json');
+    } else if (needsStructureUpdate && isFluidNC) {
+      log('Skipping GRBL firmware structure query for FluidNC');
     }
 
     // Always refresh current values on connection using $$ and persist to firmware.json
