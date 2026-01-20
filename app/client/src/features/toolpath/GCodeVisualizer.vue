@@ -826,7 +826,7 @@ let controls: any;
 let gcodeVisualizer: GCodeVisualizer;
 let animationId: number;
 let axisLabelsGroup: THREE.Group;
-let cuttingPointer: THREE.Group;
+let cuttingPointer: THREE.Group | null;
 let resizeObserver: ResizeObserver;
 let directionalLight: THREE.DirectionalLight;
 let gridGroup: THREE.Group;
@@ -1155,10 +1155,8 @@ const initThreeJS = () => {
   const initialBounds = computeGridBoundsFrom(props.workOffset);
   gcodeVisualizer.setGridBounds(initialBounds);
 
-  // Add cutting pointer/spindle
-  cuttingPointer = generateCuttingPointer();
-  cuttingPointer.position.set(0, 0, 0); // Start at origin
-  scene.add(cuttingPointer);
+  // Cutting pointer/spindle overlay removed (ncSender legacy)
+  cuttingPointer = null;
 
   refreshHomeIndicator();
 
