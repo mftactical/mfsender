@@ -12,10 +12,6 @@ If you enjoy **mfsender** and my other CNC / maker projects, consider supporting
 Your support helps keep the development going — and also funds my growing addiction to using AI tools for coding. 😆
 Apparently, the more I build features, the more tokens I burn. Send help (or coffee). ☕️
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub-pink.svg?logo=github)](https://github.com/sponsors/siganberg)
-[![Support on Patreon](https://img.shields.io/badge/Support%20on-Patreon-orange.svg)](https://www.patreon.com/c/FrancisCreation)
-[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate/?business=JK9NA7HLPQE7N&no_recurring=0&item_name=To+fund+the+development+of+mfsender&currency_code=USD)
-
 
 
 
@@ -26,13 +22,13 @@ mfsender is a lightweight, cross‑platform CNC controller with a clean UI and b
 ## 📸 Screenshots
 
 ### Dark Mode
-![mfsender Dark Mode](image.png)
+
 
 ### Light Mode
-![mfsender Light Mode](image-1.png)
+
 
 ### Portrait Mode
-![mfsender Portrait Mode](image-2.png)
+
 
 ## ✨ Why mfsender
 - Cross‑platform desktop app (macOS, Windows, Linux, Raspberry Pi).
@@ -55,7 +51,7 @@ mfsender is a lightweight, cross‑platform CNC controller with a clean UI and b
 
 ## 📦 Install
 
-Download a release from the [Releases page](https://github.com/siganberg/mfsender/releases) for your OS:
+Download a release from the
 
 - **macOS**: open the `.dmg`, drag mfsender to Applications. Since the app is not code-signed by Apple, you'll need to clear the quarantine attribute before running:
   ```bash
