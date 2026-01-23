@@ -1123,7 +1123,7 @@ export class CNCController extends EventEmitter {
     this.jogWatchdog.clear();
   }
 
-  writeToConnection(commandToSend, { rawCommand, isRealTime } = {}) {
+  writeToConnection(commandToSend, { rawCommand, isRealTime, isJogCommand } = {}) {
     // Allow writes if connected or still verifying the controller during initial handshake
     if (!this.connection || (!this.isConnected && !this.isVerifyingConnection)) {
       return Promise.reject(new Error('Connection is not available'));
@@ -1145,13 +1145,13 @@ export class CNCController extends EventEmitter {
           return;
         }
 
-        this.logCommandSent(rawCommand, isRealTime);
+        this.logCommandSent(rawCommand, isRealTime, isJogCommand);
         resolve();
       });
     });
   }
 
-  logCommandSent(rawCommand, isRealTime) {
+  logCommandSent(rawCommand, isRealTime, isJogCommand) {
     // Don't log polling commands (? and $pinstate)
     const isPollCommand = rawCommand === '?' || rawCommand.toUpperCase() === '$PINSTATE';
 
@@ -1166,7 +1166,8 @@ export class CNCController extends EventEmitter {
         log('Real-time command sent:', rawCommand);
       }
     } else if (rawCommand) {
-      log('Command sent:', rawCommand.toUpperCase());
+      const prefix = isJogCommand ? '0x85 + ' : '';
+      log('Command sent:', prefix + rawCommand.toUpperCase());
     }
   }
 
@@ -1275,6 +1276,9 @@ export class CNCController extends EventEmitter {
     // Detect continuous jog commands ($J=) and enable dead-man switch watchdog
     // Skip watchdog for step jogs (meta.jogStep = true) since they complete quickly
     const isJogCommand = /^\$J=/i.test(finalCommand);
+    if (isJogCommand) {
+      commandToSend = '\x85' + commandToSend;
+    }
     const isStepJog = normalizedMeta?.jogStep === true;
     if (isJogCommand && !isStepJog) {
       this.jogWatchdog.start(resolvedCommandId, finalCommand);
@@ -1450,7 +1454,8 @@ export class CNCController extends EventEmitter {
       try {
         await this.writeToConnection(commandToSend, {
           rawCommand: normalizedCommand,
-          isRealTime: false
+          isRealTime: false,
+          isJogCommand
         });
 
         commandEntry.sentAt = Date.now();

@@ -156,6 +156,17 @@ export class JogSessionManager {
     const sessionSet = this.sessionsBySocket.get(ws) ?? new Set();
     this.sessionsBySocket.set(ws, sessionSet);
 
+    const session = {
+      jogId,
+      ws,
+      command,
+      displayCommand: displayCommand || command,
+      stopping: false
+    };
+
+    this.sessionsById.set(jogId, session);
+    sessionSet.add(jogId);
+
     try {
       // Safety: Cancel any stuck jog before starting new one (handles failed deadman switch)
       await this.cncController.sendCommand(REALTIME_JOG_CANCEL, {
@@ -174,6 +185,8 @@ export class JogSessionManager {
           // Command was blocked or handled by CommandProcessor
           const message = result.result?.message || 'Jog command blocked';
           log('Jog start blocked by CommandProcessor', `jogId=${jogId}`, message);
+          this.sessionsById.delete(jogId);
+          sessionSet.delete(jogId);
           this.sendSafe(ws, {
             type: 'jog:start-failed',
             data: { jogId, message }
@@ -200,23 +213,14 @@ export class JogSessionManager {
     } catch (error) {
       const message = error?.message || 'Failed to start jog command';
       log('Jog start failed', `jogId=${jogId}`, message);
+      this.sessionsById.delete(jogId);
+      sessionSet.delete(jogId);
       this.sendSafe(ws, {
         type: 'jog:start-failed',
         data: { jogId, message }
       });
       return;
     }
-
-    const session = {
-      jogId,
-      ws,
-      command,
-      displayCommand: displayCommand || command,
-      stopping: false
-    };
-
-    this.sessionsById.set(jogId, session);
-    sessionSet.add(jogId);
 
     log('Jog started', `jogId=${jogId}`);
 

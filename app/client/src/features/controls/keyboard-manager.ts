@@ -105,7 +105,8 @@ class KeyboardManager {
     const eventCode = event.code || combo;
 
     if (jogMeta || diagonalJogMeta) {
-      if (this.jogStates.has(eventCode)) {
+      // Ignore key repeat (both browser auto-repeat and our own tracking)
+      if (event.repeat || this.jogStates.has(eventCode)) {
         event.preventDefault();
         event.stopPropagation();
         return;
