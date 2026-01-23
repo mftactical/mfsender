@@ -1,4 +1,11 @@
-## What's Changed
+﻿## What's Changed
 
-### 🔧 Improvements
-- Added cancel and confirm buttons when renaming files in the file manager for better control over file operations
+### Fixed
+- Improved touch handling in GCode visualizer
+- Prevented synthetic click events after touch interactions
+- Stabilized double-tap detection on touch devices
+- Added two-finger tap context menu support (Top / Front views only)
+
+### Improved
+- More robust jog cancellation under rapid input
+- No regressions to mouse or keyboard workflows
