@@ -1,4 +1,4 @@
-> **IMPORTANT DISCLAIMER:** This is my personal project and has only been tested by me on my AltMill CNC. If you choose to run it, you do so entirely at your own risk. I am not responsible for any damage, malfunction, or personal injury that may result from the use or misuse of mfsender. Use it with caution and at your own discretion.
+> **IMPORTANT DISCLAIMER:** This is my personal project and has only been tested by me on my Esp32 Fluidnc CNC. If you choose to run it, you do so entirely at your own risk. I am not responsible for any damage, malfunction, or personal injury that may result from the use or misuse of mfsender. Use it with caution and at your own discretion.
 
 ## 💬 Join the Community
 
@@ -17,7 +17,7 @@ Apparently, the more I build features, the more tokens I burn. Send help (or cof
 
 # mfsender — Simple, Fast G‑Code Sender for Fluidnc
 
-mfsender is a lightweight, cross‑platform CNC controller with a clean UI and built‑in 3D toolpath preview. It connects to GrblHAL controllers over USB serial or Ethernet and can run either as a desktop app (Electron) or as a small local server you access from any browser on your network.
+mfsender is a lightweight, cross‑platform CNC controller with a clean UI and built‑in 3D toolpath preview. It connects to Fluidnc controllers over USB serial or Ethernet and can run either as a desktop app (Electron) or as a small local server you access from any browser on your network.
 
 ## 📸 Screenshots
 
@@ -47,7 +47,7 @@ mfsender is a lightweight, cross‑platform CNC controller with a clean UI and b
 
 - **Limit Switches Required**: Machines without physical limit switches are not yet supported, as some functionality relies on machine coordinate movement.
 - **GRBL Compatibility**: Although mfsender may work with GRBL, it has not been thoroughly tested. Use with caution.
-- **Hardware Tested**: mfsender has only been tested with the Sienci SLEB-EXT board (included with AltMill CNC) running grblHAL or sienciHAL firmware.
+- **Hardware Tested**: mfsender has only been tested with the esp32 board (included with Anolex-CNC) running Fluidnc firmware.
 
 ## 📦 Install
 
@@ -68,7 +68,7 @@ Download a release from the
 ## 🚀 Quick Start
 1) Connect your controller
 - USB: plug your controller via USB. Default baud is 115200.
-- Ethernet: ensure you know the controller's IP and port (default GrblHAL telnet‑style ports are often 23 or device‑specific).
+- Ethernet: ensure you know the controller's IP and port (default Fluidnc telnet‑style ports are often 23 or device‑specific).
 
 2) Launch mfsender
 - On first launch, a setup dialog guides you to choose USB or Ethernet, pick the port, and confirm baud/IP/port. Save to connect.
