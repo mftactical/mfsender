@@ -19,7 +19,7 @@ import { Router } from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readSettings } from '../../core/settings-manager.js';
-import { readMacros } from '../macro/storage.js';
+import { readMacros } from '../macro/m98-storage.js';
 import { pluginManager } from '../../core/plugin-manager.js';
 import { getAllTools } from '../tools/tools-storage.js';
 import { getUserDataDir } from '../../utils/paths.js';

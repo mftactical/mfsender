@@ -21,16 +21,19 @@ import {
   getMacro,
   createMacro,
   updateMacro,
-  deleteMacro
-} from './storage.js';
+  deleteMacro,
+  isValidMacroId,
+  normalizeMacroId
+} from './m98-storage.js';
 import { createLogger } from '../../core/logger.js';
 
 const { log, error: logError } = createLogger('Macro');
 
 export function createMacroRoutes(cncController, commandProcessor) {
   const router = Router();
+  const bases = ['/macros', '/m98-macros'];
 
-  router.get('/macros', (req, res) => {
+  const handleList = (req, res) => {
     try {
       const macros = readMacros();
       res.json(macros);
@@ -38,11 +41,16 @@ export function createMacroRoutes(cncController, commandProcessor) {
       log('Error reading macros:', error);
       res.status(500).json({ error: 'Failed to read macros' });
     }
-  });
+  };
 
-  router.get('/macros/:id', (req, res) => {
+  const handleGet = (req, res) => {
     try {
-      const macro = getMacro(req.params.id);
+      const macroId = normalizeMacroId(req.params.id);
+      if (!macroId || !isValidMacroId(macroId)) {
+        return res.status(400).json({ error: 'Macro ID must be between 9001 and 9999' });
+      }
+
+      const macro = getMacro(macroId);
       if (!macro) {
         return res.status(404).json({ error: 'Macro not found' });
       }
@@ -51,9 +59,9 @@ export function createMacroRoutes(cncController, commandProcessor) {
       log('Error reading macro:', error);
       res.status(500).json({ error: 'Failed to read macro' });
     }
-  });
+  };
 
-  router.post('/macros', (req, res) => {
+  const handleCreate = (req, res) => {
     try {
       const { name, description, commands } = req.body;
 
@@ -67,9 +75,9 @@ export function createMacroRoutes(cncController, commandProcessor) {
       log('Error creating macro:', error);
       res.status(500).json({ error: 'Failed to create macro' });
     }
-  });
+  };
 
-  router.put('/macros/:id', (req, res) => {
+  const handleUpdate = (req, res) => {
     try {
       const { name, description, commands } = req.body;
       const updates = {};
@@ -78,7 +86,12 @@ export function createMacroRoutes(cncController, commandProcessor) {
       if (description !== undefined) updates.description = description;
       if (commands !== undefined) updates.commands = commands;
 
-      const updatedMacro = updateMacro(req.params.id, updates);
+      const macroId = normalizeMacroId(req.params.id);
+      if (!macroId || !isValidMacroId(macroId)) {
+        return res.status(400).json({ error: 'Macro ID must be between 9001 and 9999' });
+      }
+
+      const updatedMacro = updateMacro(macroId, updates);
       res.json(updatedMacro);
     } catch (error) {
       if (error.message.includes('not found')) {
@@ -87,11 +100,16 @@ export function createMacroRoutes(cncController, commandProcessor) {
       log('Error updating macro:', error);
       res.status(500).json({ error: 'Failed to update macro' });
     }
-  });
+  };
 
-  router.delete('/macros/:id', (req, res) => {
+  const handleDelete = (req, res) => {
     try {
-      const result = deleteMacro(req.params.id);
+      const macroId = normalizeMacroId(req.params.id);
+      if (!macroId || !isValidMacroId(macroId)) {
+        return res.status(400).json({ error: 'Macro ID must be between 9001 and 9999' });
+      }
+
+      const result = deleteMacro(macroId);
       res.json(result);
     } catch (error) {
       if (error.message.includes('not found')) {
@@ -100,75 +118,74 @@ export function createMacroRoutes(cncController, commandProcessor) {
       log('Error deleting macro:', error);
       res.status(500).json({ error: 'Failed to delete macro' });
     }
-  });
+  };
 
-  router.post('/macros/:id/execute', async (req, res) => {
+  const handleExecute = async (req, res) => {
     try {
       if (!cncController || !cncController.isConnected) {
         return res.status(503).json({ error: 'CNC controller is not connected' });
       }
 
-      const macro = getMacro(req.params.id);
+      const macroId = normalizeMacroId(req.params.id);
+      if (!macroId || !isValidMacroId(macroId)) {
+        return res.status(400).json({ error: 'Macro ID must be between 9001 and 9999' });
+      }
+
+      const macro = getMacro(macroId);
       if (!macro) {
         return res.status(404).json({ error: 'Macro not found' });
       }
 
-      // Split commands by newline and filter empty lines
-      const commands = macro.commands.split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== '');
+      const m98Command = `M98 P${macroId}`;
+      log(`Executing macro via M98: ${m98Command} (${macro.name})`);
 
-      log(`Executing macro: ${macro.name} (${commands.length} commands)`);
+      const pluginContext = {
+        sourceId: 'macro',
+        commandId: `macro-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        meta: { sourceId: 'macro', macroId: macroId, macroName: macro.name },
+        machineState: cncController.lastStatus
+      };
 
-      // Send each command separately
-      for (const command of commands) {
-        // Process command through Command Processor
-        const pluginContext = {
+      const result = await commandProcessor.instance.process(m98Command, pluginContext);
+      if (!result.shouldContinue) {
+        return res.status(400).json({ error: 'Failed to execute macro', message: result.result?.message || 'Execution failed' });
+      }
+
+      for (const cmd of result.commands) {
+        const cmdDisplayCommand = cmd.displayCommand || cmd.command;
+        const cmdMeta = {
           sourceId: 'macro',
-          commandId: `macro-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          meta: { sourceId: 'macro', macroId: req.params.id, macroName: macro.name },
-          machineState: cncController.lastStatus
+          macroId: macroId,
+          macroName: macro.name,
+          ...(cmd.meta || {})
         };
 
-        const result = await commandProcessor.instance.process(command, pluginContext);
+        const uniqueCommandId = cmd.commandId || `${pluginContext.commandId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-        // Check if command was skipped (e.g., same-tool M6)
-        if (!result.shouldContinue) {
-          continue; // Skip to next command
-        }
-
-        const processedCommands = result.commands;
-
-        // Iterate through command array and send each to controller
-        for (const cmd of processedCommands) {
-          const cmdDisplayCommand = cmd.displayCommand || cmd.command;
-          const cmdMeta = {
-            sourceId: 'macro',
-            macroId: req.params.id,
-            macroName: macro.name,
-            ...(cmd.meta || {})
-          };
-
-          // Generate unique commandId for each command in the array
-          const uniqueCommandId = cmd.commandId || `${pluginContext.commandId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-          await cncController.sendCommand(cmd.command, {
-            commandId: uniqueCommandId,
-            displayCommand: cmdDisplayCommand,
-            meta: Object.keys(cmdMeta).length > 0 ? cmdMeta : null
-          });
-        }
+        await cncController.sendCommand(cmd.command, {
+          commandId: uniqueCommandId,
+          displayCommand: cmdDisplayCommand,
+          meta: Object.keys(cmdMeta).length > 0 ? cmdMeta : null
+        });
       }
 
       res.json({
         success: true,
-        message: `Macro "${macro.name}" executed successfully`,
-        commandsExecuted: commands.length
+        message: `Macro "${macro.name}" executed via ${m98Command}`
       });
     } catch (error) {
       log('Error executing macro:', error);
       res.status(500).json({ error: 'Failed to execute macro', message: error.message });
     }
+  };
+
+  bases.forEach((base) => {
+    router.get(base, handleList);
+    router.get(`${base}/:id`, handleGet);
+    router.post(base, handleCreate);
+    router.put(`${base}/:id`, handleUpdate);
+    router.delete(`${base}/:id`, handleDelete);
+    router.post(`${base}/:id/execute`, handleExecute);
   });
 
   return router;

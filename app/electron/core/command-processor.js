@@ -16,14 +16,17 @@
  */
 
 import fs from 'node:fs/promises';
-import { checkSameToolChange, parseM6Command, isSpindleStartCommand, isSpindleStopCommand } from '../utils/gcode-patterns.js';
+import { checkSameToolChange, parseM6Command, parseM98Command, isSpindleStartCommand, isSpindleStopCommand } from '../utils/gcode-patterns.js';
 import { getSetting } from './settings-manager.js';
 import { createLogger } from './logger.js';
+import { M98Expander } from '../features/macro/m98-expander.js';
+import { isValidMacroId, normalizeMacroId } from '../features/macro/m98-storage.js';
 
 const { log, error: logError } = createLogger('CommandProcessor');
 
 // Maximum feed rate allowed in Door state (mm/min)
 const DOOR_STATE_MAX_FEED_RATE = 1000;
+const M98_MAX_DEPTH = 16;
 
 /**
  * Centralized command processor
@@ -44,6 +47,7 @@ export class CommandProcessor {
     this.broadcast = broadcast;
     this.serverState = serverState;
     this.firmwareFilePath = firmwareFilePath;
+    this.m98Expander = new M98Expander();
   }
 
   /**
@@ -61,6 +65,15 @@ export class CommandProcessor {
    *   { shouldContinue: true, commands: [...] }
    */
   async process(command, context = {}) {
+    const m98Parse = parseM98Command(command);
+    if (m98Parse?.matched) {
+      return this.processM98(command, context, m98Parse);
+    }
+
+    return this.processNonM98(command, context);
+  }
+
+  async processNonM98(command, context = {}) {
     const {
       commandId,
       meta = {},
@@ -292,6 +305,202 @@ export class CommandProcessor {
       log('Error processing command through Plugin Manager:', error);
       throw error;
     }
+  }
+
+  async processM98(command, context = {}, parsed) {
+    const {
+      commandId,
+      meta = {},
+      machineState
+    } = context;
+
+    const macroId = normalizeMacroId(parsed?.macroId);
+    if (!macroId) {
+      return this.createMacroErrorResult(commandId, command, meta, 'M98 requires P####');
+    }
+
+    if (!isValidMacroId(macroId)) {
+      return this.createMacroErrorResult(commandId, command, meta, `Macro ID ${macroId} is out of range (9001-9999)`);
+    }
+
+    const commandMeta = {
+      ...meta,
+      sourceId: meta.sourceId || 'macro',
+      macroId
+    };
+
+    let rootExpansion;
+    try {
+      rootExpansion = this.m98Expander.expand(command);
+    } catch (error) {
+      return this.createMacroErrorResult(commandId, command, commandMeta, error?.message || 'Failed to expand macro');
+    }
+
+    if (!rootExpansion?.macro) {
+      return this.createMacroErrorResult(commandId, command, commandMeta, `Macro ${macroId} not found`);
+    }
+
+    const rootMacro = rootExpansion.macro;
+    const rootCommands = rootExpansion.commands;
+
+    const stack = [];
+    const stackIds = new Set();
+    const expandedCommands = [];
+
+    const pushMacro = (macro, commands) => {
+      stack.push({
+        id: macro.id,
+        name: macro.name || `Macro ${macro.id}`,
+        commands,
+        index: 0
+      });
+      stackIds.add(macro.id);
+      this.emitMacroMessage(`M98 P${macro.id} (${macro.name || `Macro ${macro.id}`})`, macro);
+      this.emitMacroMessage(`(Executing: ${macro.name || `Macro ${macro.id}`})`, macro);
+    };
+
+    pushMacro(rootMacro, rootCommands);
+
+    while (stack.length > 0) {
+      const current = stack[stack.length - 1];
+
+      if (current.index >= current.commands.length) {
+        this.emitMacroMessage(`(End of: ${current.name})`, current, 'success');
+        stack.pop();
+        stackIds.delete(current.id);
+        continue;
+      }
+
+      const line = current.commands[current.index];
+      current.index += 1;
+
+      if (!line) {
+        continue;
+      }
+
+      const nestedParse = parseM98Command(line);
+      if (nestedParse?.matched) {
+        const nestedId = normalizeMacroId(nestedParse.macroId);
+        if (!nestedId) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, 'Nested M98 requires P####');
+        }
+
+        if (!isValidMacroId(nestedId)) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, `Macro ID ${nestedId} is out of range (9001-9999)`);
+        }
+
+        if (stackIds.has(nestedId)) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, `Macro recursion detected at ${nestedId}`);
+        }
+
+        if (stack.length >= M98_MAX_DEPTH) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, `Macro depth exceeds ${M98_MAX_DEPTH}`);
+        }
+
+        let nestedExpansion;
+        try {
+          nestedExpansion = this.m98Expander.expand(line);
+        } catch (error) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, error?.message || 'Failed to expand macro');
+        }
+
+        if (!nestedExpansion?.macro) {
+          return this.createMacroErrorResult(commandId, line, commandMeta, `Macro ${nestedId} not found`);
+        }
+
+        pushMacro(nestedExpansion.macro, nestedExpansion.commands);
+        continue;
+      }
+
+      const macroContext = {
+        sourceId: commandMeta.sourceId || 'macro',
+        commandId: `macro-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        meta: {
+          ...commandMeta,
+          macroName: current.name,
+          macroId: current.id
+        },
+        machineState
+      };
+
+      const result = await this.processNonM98(line, macroContext);
+      if (!result.shouldContinue) {
+        continue;
+      }
+
+      for (const cmd of result.commands) {
+        expandedCommands.push({
+          ...cmd,
+          isOriginal: false,
+          meta: {
+            macroId: current.id,
+            macroName: current.name,
+            ...(cmd.meta || {})
+          }
+        });
+      }
+    }
+
+    return {
+      shouldContinue: true,
+      commands: expandedCommands
+    };
+  }
+
+  emitMacroMessage(message, macro, status = 'pending') {
+    const macroId = typeof macro === 'object' ? macro.id : macro;
+    const macroName = typeof macro === 'object' ? macro.name : null;
+    const id = `macro-msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    this.broadcast('cnc-command', {
+      id,
+      command: message,
+      displayCommand: message,
+      status,
+      timestamp: new Date().toISOString(),
+      sourceId: 'macro',
+      meta: {
+        macroId,
+        macroName
+      }
+    });
+  }
+
+  createMacroErrorResult(commandId, command, meta, message) {
+    const displayCommand = `${command} (ERROR - ${message})`;
+
+    this.broadcast('cnc-command', {
+      id: commandId,
+      command,
+      displayCommand,
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      sourceId: meta.sourceId || 'macro',
+      meta
+    });
+
+    this.broadcast('cnc-command-result', {
+      id: commandId,
+      command,
+      displayCommand,
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      sourceId: meta.sourceId || 'macro',
+      meta,
+      error: { message }
+    });
+
+    return {
+      shouldContinue: false,
+      result: {
+        status: 'error',
+        id: commandId,
+        command,
+        displayCommand,
+        message,
+        timestamp: new Date().toISOString()
+      }
+    };
   }
 
   /**

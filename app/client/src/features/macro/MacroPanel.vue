@@ -39,7 +39,11 @@
           @click="selectMacro(macro.id)"
         >
           <div class="macro-item-content">
-            <h3 class="macro-name">{{ macro.name }}</h3>
+            <h3 class="macro-name">
+              <span class="macro-id">{{ macro.id }}</span>
+              <span class="macro-title">{{ macro.name }}</span>
+            </h3>
+            <p class="macro-hint">M98 P{{ macro.id }}</p>
             <p v-if="macro.description" class="macro-description">{{ macro.description }}</p>
             <p v-else class="macro-preview">{{ getCommandPreview(macro.commands) }}</p>
           </div>
@@ -47,7 +51,7 @@
             class="macro-play-btn"
             @click.stop="runMacroFromList(macro.id)"
             :disabled="!connected"
-            title="Run macro"
+            :title="`Execute M98 P${macro.id}`"
           >
             ▶
           </button>
@@ -72,7 +76,7 @@
                 <polyline points="7 3 7 8 15 8"/>
               </svg>
             </button>
-            <button class="btn-icon btn-run" @click="runMacro" :disabled="!connected || selectedMacroId === 'new'" title="Run">
+            <button class="btn-icon btn-run" @click="runMacro" :disabled="!connected || selectedMacroId === 'new'" title="Execute M98">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5v14l11-7z"/>
               </svg>
@@ -88,6 +92,10 @@
           </div>
         </div>
         <div class="editor-form">
+          <div v-if="selectedMacroId && selectedMacroId !== 'new'" class="macro-hint-banner">
+            <span class="macro-hint-label">Hint</span>
+            <span class="macro-hint-text">M98 P{{ selectedMacroId }}</span>
+          </div>
           <div class="form-group-inline">
             <label>Name</label>
             <input
@@ -443,6 +451,23 @@ onUnmounted(() => {
   color: var(--color-text-primary);
 }
 
+.macro-id {
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+  color: var(--color-text-secondary);
+}
+
+.macro-title {
+  color: var(--color-text-primary);
+}
+
+.macro-hint {
+  margin: 0 0 4px 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .macro-play-btn {
   flex-shrink: 0;
   width: 28px;
@@ -570,6 +595,28 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--gap-xs);
   min-height: 0;
+}
+
+.macro-hint-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: 6px 10px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface-muted);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--gap-xs);
+}
+
+.macro-hint-label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.macro-hint-text {
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .form-group {

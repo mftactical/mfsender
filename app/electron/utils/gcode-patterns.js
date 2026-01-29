@@ -51,7 +51,7 @@ const M6_PATTERN = /(?:^|[^A-Z])M0*6(?:\s*T0*(\d+)|(?=[^0-9T])|$)|(?:^|[^A-Z])T0
  * @param {string} command - The G-code command to check
  * @returns {boolean} True if the line is a comment
  */
-function isGcodeComment(command) {
+export function isGcodeComment(command) {
   const trimmed = command.trim();
 
   // Strip optional N-number prefix (e.g., "N16 ;M6 T3" -> ";M6 T3")
@@ -68,6 +68,58 @@ function isGcodeComment(command) {
   }
 
   return false;
+}
+
+/**
+ * Parse M98 macro call command and extract macro ID (P word)
+ *
+ * Matches:
+ * - M98 P9001
+ * - M98P9001
+ * - N10 M98 P9001
+ *
+ * Does NOT match:
+ * - M980 (other M codes)
+ * - Commented lines
+ *
+ * @param {string} command - The G-code command to parse
+ * @returns {Object|null} Object with { macroId, matched } or null if no match
+ */
+export function parseM98Command(command) {
+  if (!command || typeof command !== 'string') {
+    return null;
+  }
+
+  if (isGcodeComment(command)) {
+    return null;
+  }
+
+  const trimmed = command.trim();
+  const withoutLineNumber = trimmed.replace(/^N\d+\s*/i, '');
+  const upper = withoutLineNumber.toUpperCase();
+  const match = upper.match(/(?:^|[^A-Z0-9])M0*98(?!\d)(?:\s*P0*(\d+))?/);
+
+  if (!match) {
+    return null;
+  }
+
+  const macroId = match[1] ? String(parseInt(match[1], 10)) : null;
+
+  return {
+    macroId,
+    matched: true
+  };
+}
+
+/**
+ * Check if a command is an M98 macro call
+ *
+ * @param {string} command - The G-code command to check
+ * @returns {boolean} True if command is M98, false otherwise
+ */
+export function isM98Command(command) {
+  const parsed = parseM98Command(command);
+  return parsed?.matched === true;
 }
 
 /**
