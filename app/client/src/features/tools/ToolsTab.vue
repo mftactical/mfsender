@@ -491,7 +491,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { api } from '../../lib/api.js';
 import Dialog from '../../components/Dialog.vue';
 import ConfirmPanel from '../../components/ConfirmPanel.vue';
@@ -561,7 +561,12 @@ const emit = defineEmits<{
 const appStore = useAppStore();
 
 // Computed
-const maxToolCount = computed(() => props.maxToolCount || 1);
+const maxToolCount = ref(props.maxToolCount || 1);
+watch(() => props.maxToolCount, (value) => {
+  if (typeof value === 'number' && value > 0) {
+    maxToolCount.value = value;
+  }
+});
 const diameterPlaceholder = computed(() => appStore.unitsPreference.value === 'imperial' ? '0.2500' : '6.350');
 const tloPlaceholder = computed(() => appStore.unitsPreference.value === 'imperial' ? '0.0000' : '0.000');
 

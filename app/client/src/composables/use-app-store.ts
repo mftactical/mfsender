@@ -87,6 +87,7 @@ const serverState = reactive({
     remainingSec?: number | null;
     progressPercent?: number | null;
     runtimeSec?: number | null;
+    estimatedSec?: number | null;
     sourceId?: string;
   } | null
 });
@@ -96,7 +97,7 @@ const status = reactive({
   machineState: 'offline',
   machineCoords: { x: 0, y: 0, z: 0, a: 0 },
   workCoords: { x: 0, y: 0, z: 0, a: 0 },
-  wco: { x: 0, y: 0, z: 0 },
+  wco: { x: 0, y: 0, z: 0, a: 0 },
   alarms: [] as string[],
   feedRate: 0,
   spindleRpmTarget: 0,
@@ -176,7 +177,7 @@ const jogConfig = reactive({
 
 // INTERNAL STATE
 let storeInitialized = false;
-let lastJobStatus: 'running' | 'paused' | 'stopped' | undefined = undefined;
+let lastJobStatus: 'running' | 'paused' | 'stopped' | 'completed' | undefined = undefined;
 let lastJobFilename: string | undefined = undefined;
 let responseLineIdCounter = 0;
 let prevShowProgress: boolean | undefined = undefined;
@@ -235,20 +236,22 @@ const applyStatusReport = (report: StatusReport | null | undefined) => {
   }
 
   if (report.WCO) {
-    const [x, y, z] = report.WCO.split(',').map(Number);
+    const [x, y, z, a = status.wco.a] = report.WCO.split(',').map(Number);
     if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
       status.wco.x = x;
       status.wco.y = y;
       status.wco.z = z;
+      status.wco.a = isNaN(a) ? status.wco.a : a;
     }
   }
 
   if (report.MPos) {
-    const [x, y, z] = report.MPos.split(',').map(Number);
-    status.machineCoords = { x, y, z, a: 0 };
+    const [x, y, z, a = status.machineCoords.a] = report.MPos.split(',').map(Number);
+    status.machineCoords = { x, y, z, a: isNaN(a) ? status.machineCoords.a : a };
     status.workCoords.x = status.machineCoords.x - status.wco.x;
     status.workCoords.y = status.machineCoords.y - status.wco.y;
     status.workCoords.z = status.machineCoords.z - status.wco.z;
+    status.workCoords.a = status.machineCoords.a - status.wco.a;
   }
 
   if (typeof (report as any).feedRate === 'number') {
@@ -681,7 +684,7 @@ export function initializeStore() {
     }
 
     // If a run starts (status transitions into running), reset completed tracking
-    const currentStatus = serverState.jobLoaded?.status as any;
+    const currentStatus = serverState.jobLoaded?.status ?? undefined;
     const currentFilename = serverState.jobLoaded?.filename as string | undefined;
     const currentLine = serverState.jobLoaded?.currentLine;
 

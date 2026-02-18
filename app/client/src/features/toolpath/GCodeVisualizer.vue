@@ -538,7 +538,7 @@ const props = withDefaults(defineProps<{
   theme: 'light' | 'dark';
   senderStatus?: string;
   machineState?: { isToolChanging?: boolean };
-  jobLoaded?: { filename: string; currentLine: number; totalLines: number; status: 'running' | 'paused' | 'stopped' | 'completed'; sourceFile?: string; isTemporary?: boolean } | null;
+  jobLoaded?: { filename: string; currentLine: number; totalLines: number; status: 'running' | 'paused' | 'stopped' | 'completed' | null; sourceFile?: string; isTemporary?: boolean } | null;
   workCoords?: { x: number; y: number; z: number; a: number };
   workOffset?: { x: number; y: number; z: number; a: number };
   gridSizeX?: number;
@@ -2135,7 +2135,7 @@ const executeMoveSpindle = async () => {
 
 const applyTransform = async (
   type: 'rotate' | 'mirror' | 'offset',
-  params: { degrees?: 90 | -90; axis?: 'x' | 'y'; offsetX?: number; offsetY?: number }
+  params: { degrees?: 90 | -90; axis?: 'x' | 'y'; offsetX?: number; offsetY?: number; offsetZ?: number }
 ) => {
   if (isTransforming.value || !hasFile.value) return;
 

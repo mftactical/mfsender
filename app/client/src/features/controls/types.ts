@@ -26,5 +26,6 @@ export interface KeyboardState {
   settings: KeyboardSettings;
   featureEnabled: boolean;
   captureMode: boolean;
+  controlsTabActive: boolean;
   loaded: boolean;
 }

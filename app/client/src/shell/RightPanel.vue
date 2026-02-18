@@ -61,20 +61,41 @@ type MachineOrientation = {
 const props = defineProps<{
   status: {
     connected: boolean;
-    machineCoords: Record<string, number>;
-    workCoords: Record<string, number>;
-    alarms: string[];
+    machineCoords: { x: number; y: number; z: number; a?: number };
+    workCoords: { x: number; y: number; z: number; a?: number };
+    alarms: readonly string[];
     feedRate: number;
     spindleRpmTarget: number;
     spindleRpmActual: number;
+    feedrateOverride: number;
+    rapidOverride: number;
+    spindleOverride: number;
   };
-  consoleLines: Array<{ id: string | number; level: string; message: string; timestamp: string; status?: 'pending' | 'success' | 'error'; type?: 'command' | 'response'; sourceId?: string }>;
+  consoleLines: ReadonlyArray<{
+    id: string | number;
+    level: 'info' | 'warning' | 'error';
+    message: string;
+    timestamp: string;
+    status?: 'pending' | 'success' | 'error';
+    type?: 'command' | 'response';
+    sourceId?: string;
+  }>;
   jogConfig: {
     stepSize: number;
     stepOptions: number[];
     feedRate?: number;
   };
-  jobLoaded?: { filename: string; currentLine: number; totalLines: number; status: 'running' | 'paused' | 'stopped' } | null;
+  jobLoaded?: {
+    filename: string;
+    currentLine: number;
+    totalLines: number;
+    status: 'running' | 'paused' | 'stopped' | 'completed';
+    remainingSec?: number | null;
+    progressPercent?: number | null;
+    runtimeSec?: number | null;
+    estimatedSec?: number | null;
+    sourceId?: string;
+  } | null;
   gridSizeX?: number;
   gridSizeY?: number;
   zMaxTravel?: number | null;

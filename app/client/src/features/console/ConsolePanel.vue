@@ -520,6 +520,7 @@
 import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed, reactive, shallowRef } from 'vue';
 import { api } from './api';
 import { fetchToolMenuItems, executeToolMenuItem as runToolMenuItem } from '../plugins/api';
+import type { ToolMenuItem } from '../plugins/api';
 import { getLinesRangeFromIDB, isIDBEnabled } from '../../lib/gcode-store.js';
 import { isTerminalIDBEnabled } from '../../lib/terminal-store.js';
 import { getCommandHistoryFromInit } from '@/lib/init';
@@ -536,7 +537,15 @@ import ConfirmPanel from '@/components/ConfirmPanel.vue';
 const store = useConsoleStore();
 
 const props = withDefaults(defineProps<{
-  lines?: Array<{ id: string | number; level: string; message: string; timestamp: string; status?: 'pending' | 'success' | 'error'; type?: 'command' | 'response'; sourceId?: string }>;
+  lines?: ReadonlyArray<{
+    id: string | number;
+    level: 'info' | 'warning' | 'error';
+    message: string;
+    timestamp: string;
+    status?: 'pending' | 'success' | 'error';
+    type?: 'command' | 'response';
+    sourceId?: string;
+  }>;
   connected?: boolean;
   senderStatus?: string;
 }>(), {
@@ -601,6 +610,8 @@ const currentFindIndex = ref(0);
 const monacoViewerRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
 const monacoMainViewerRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
 const monacoEditorRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+const editorTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const lineNumbersRef = ref<HTMLElement | null>(null);
 const currentLineDecorations = ref<string[]>([]);
 const mainViewerLineDecorations = ref<string[]>([]);
 
@@ -1215,7 +1226,7 @@ const terminalLines = computed(() => (props.lines || []).filter(l => {
 }));
 
 // Plugin Tools state
-const toolMenuItems = ref<Array<{ pluginId: string; label: string; clientOnly?: boolean }>>([]);
+const toolMenuItems = ref<ToolMenuItem[]>([]);
 const loadingTools = ref(false);
 
 // G-Code loading state
@@ -1913,7 +1924,7 @@ const loadToolMenuItems = async () => {
 };
 
 // Execute a tool menu item
-const executeToolMenuItem = async (item: { pluginId: string; label: string }) => {
+const executeToolMenuItem = async (item: ToolMenuItem) => {
   const key = `${item.pluginId}-${item.label}`;
   executingTool.value = key;
 
