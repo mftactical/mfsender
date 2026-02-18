@@ -98,7 +98,13 @@ const DEFAULT_SETTINGS = {
   useDoorAsPause: true,
   remoteControl: {
     enabled: false
-  }
+  },
+  toolSetterX: 0,
+  toolSetterY: 0,
+  clearanceHeight: 5,
+  probeDepth: 25,
+  probeFeed: 100,
+  offsetZ: 0.7535
 };
 
 function getUserDataDir() {
