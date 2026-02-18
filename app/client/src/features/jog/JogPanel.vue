@@ -277,7 +277,7 @@ import Dialog from '../../components/Dialog.vue';
 import ConfirmPanel from '../../components/ConfirmPanel.vue';
 import StepControl from './StepControl.vue';
 import JogControls from './JogControls.vue';
-import { keyBindingStore } from '../keyboard/key-binding-store';
+import { keyBindingStore } from '../controls/key-binding-store';
 import { useAppStore } from '@/composables/use-app-store';
 import { formatCoordinate, getUnitGCode, mmToInches } from '@/lib/units';
 
@@ -306,7 +306,7 @@ const props = defineProps<{
     feedRateDefaults?: Record<number, number>;
   };
   isDisabled?: boolean;
-  machineCoords?: { x: number; y: number; z: number };
+  machineCoords?: { x: number; y: number; z: number; a?: number };
   gridSizeX?: number;
   gridSizeY?: number;
   zMaxTravel?: number | null;

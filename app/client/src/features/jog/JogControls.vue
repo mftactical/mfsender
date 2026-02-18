@@ -152,7 +152,7 @@ const formatFeedRateForCommand = (mmPerMin: number): string => {
   return formatJogFeedRate(mmPerMin, unitsPreference.value);
 };
 
-let jogTimer: number | null = null;
+let jogTimer: ReturnType<typeof setTimeout> | null = null;
 let heartbeatTimer: number | null = null;
 
 // Handle center button click - send soft reset

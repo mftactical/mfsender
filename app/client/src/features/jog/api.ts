@@ -17,8 +17,18 @@
 
 import { api } from '../../lib/api.js';
 
+export type JogAxis = 'X' | 'Y' | 'Z' | 'A' | 'XY';
+export type JogDirection = -1 | 1 | null;
+
 // Convenience wrappers for jog operations.
-export function jogStart(opts: { jogId: string; command: string; displayCommand?: string; axis: 'X'|'Y'|'Z'|'A'; direction: -1|1; feedRate: number; }) {
+export function jogStart(opts: {
+  jogId: string;
+  command: string;
+  displayCommand?: string;
+  axis: JogAxis;
+  direction: JogDirection;
+  feedRate: number;
+}) {
   return api.startJogSession(opts);
 }
 
@@ -30,7 +40,15 @@ export function jogHeartbeat(jogId: string) {
   return api.sendJogHeartbeat(jogId);
 }
 
-export function jogStep(opts: { command: string; displayCommand?: string; axis: 'X'|'Y'|'Z'|'A'; direction: -1|1; feedRate: number; distance: number; commandId?: string; }) {
+export function jogStep(opts: {
+  command: string;
+  displayCommand?: string;
+  axis: JogAxis;
+  direction: JogDirection;
+  feedRate: number;
+  distance: number | { x: number; y: number };
+  commandId?: string;
+}) {
   return api.sendJogStep(opts);
 }
 

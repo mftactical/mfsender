@@ -58,7 +58,7 @@
             <!-- Axis Cards (X, Y, Z) -->
             <div class="axis-cards">
               <div
-                v-for="axis in ['x', 'y', 'z']"
+                v-for="axis in axes"
                 :key="axis"
                 :class="['axis-card-mobile', { 'axis-disabled': axisControlsDisabled }]"
                 @mousedown="startLongPress(axis, $event)"
@@ -262,6 +262,7 @@ const sendSoftReset = async () => {
 };
 
 type AxisKey = 'x' | 'y' | 'z';
+const axes: readonly AxisKey[] = ['x', 'y', 'z'];
 const AXIS_ZERO_LONG_PRESS_MS = 750;
 
 const pressState = reactive<Record<string, { start: number; progress: number; raf?: number; triggered: boolean; active: boolean }>>({});
@@ -291,7 +292,8 @@ const startLongPress = (axis: AxisKey, _evt: Event) => {
 
     if (elapsed >= AXIS_ZERO_LONG_PRESS_MS && !state.triggered) {
       state.triggered = true;
-      zeroAxis(axis.toUpperCase() as any).catch(() => {});
+      const axisUpper: 'X' | 'Y' | 'Z' = axis === 'x' ? 'X' : axis === 'y' ? 'Y' : 'Z';
+      zeroAxis(axisUpper).catch(() => {});
     }
 
     state.raf = requestAnimationFrame(tick);

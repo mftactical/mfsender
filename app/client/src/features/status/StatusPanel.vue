@@ -243,9 +243,9 @@ const currentTool = computed(() => appStore.status.tool ?? 0);
 const props = defineProps<{
   status: {
     connected: boolean;
-    machineCoords: Record<string, number>;
-    workCoords: Record<string, number>;
-    alarms: string[];
+    machineCoords: { x: number; y: number; z: number; a?: number };
+    workCoords: { x: number; y: number; z: number; a?: number };
+    alarms: readonly string[];
     feedRate: number;
     spindleRpmTarget: number;
     spindleRpmActual: number;
@@ -428,7 +428,7 @@ const resetSpindleOverride = () => {
 };
 
 // --- Long press to zero work coordinate (G10 L20 <axis>0) ---
-type AxisKey = 'x' | 'y' | 'z' | string;
+type AxisKey = 'x' | 'y' | 'z' | 'xy';
 const LONG_PRESS_MS = 750;
 
 const pressState = reactive<Record<string, { start: number; progress: number; raf?: number; triggered: boolean; active: boolean }>>({});
@@ -440,7 +440,7 @@ const ensureAxisState = (axis: AxisKey) => {
   return pressState[axis];
 };
 
-let activeAxis: string | null = null;
+let activeAxis: AxisKey | null = null;
 
 const startLongPress = (axis: AxisKey, _evt: Event) => {
   if (axisControlsDisabled.value) {
@@ -452,7 +452,7 @@ const startLongPress = (axis: AxisKey, _evt: Event) => {
   state.progress = 0;
   state.triggered = false;
   state.active = true;
-  activeAxis = String(axis).toLowerCase();
+  activeAxis = axis;
 
   const tick = () => {
     if (!state.active) return; // stop if canceled
@@ -477,8 +477,8 @@ const startLongPress = (axis: AxisKey, _evt: Event) => {
       } else if (a === 'Z' && isTlsEnabled.value && !toolLengthSet.value) {
         // Show TLR warning for Z axis when TLS enabled but TLR not set
         showTlrWarningDialog.value = true;
-      } else {
-        zeroAxis(a as any).catch(() => {});
+      } else if (a === 'X' || a === 'Y' || a === 'Z') {
+        zeroAxis(a).catch(() => {});
       }
     }
 
@@ -494,7 +494,7 @@ const endLongPress = (axis: AxisKey) => {
   if (state.raf) cancelAnimationFrame(state.raf);
   state.raf = undefined;
   state.active = false;
-  if (activeAxis === String(axis).toLowerCase()) activeAxis = null;
+  if (activeAxis === axis) activeAxis = null;
   const axisLower = String(axis).toLowerCase();
   if (!state.triggered) {
     state.progress = 0;
@@ -528,14 +528,14 @@ const cancelLongPress = (axis: AxisKey) => {
   state.active = false;
   state.progress = 0;
   state.triggered = false;
-  if (String(axis).toLowerCase() === 'xy') {
+  if (axis === 'xy') {
     const sx = ensureAxisState('x');
     const sy = ensureAxisState('y');
     sx.progress = 0; sy.progress = 0;
     sx.triggered = false; sy.triggered = false;
     sx.active = false; sy.active = false;
   }
-  if (activeAxis === String(axis).toLowerCase()) activeAxis = null;
+  if (activeAxis === axis) activeAxis = null;
 };
 
 // Global release handlers to ensure cancel/reset even if pointerup occurs outside the element
@@ -546,7 +546,7 @@ const handleGlobalPointerUp = () => {
 
 watch(axisControlsDisabled, (disabled) => {
   if (!disabled) return;
-  ['x', 'y', 'z', 'xy'].forEach((axis) => {
+  (['x', 'y', 'z', 'xy'] as AxisKey[]).forEach((axis) => {
     const state = pressState[axis];
     if (state?.active || state?.progress) {
       cancelLongPress(axis);
