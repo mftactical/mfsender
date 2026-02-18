@@ -2424,9 +2424,10 @@ const handlePause = async () => {
 
 const handleStop = async () => {
   try {
-    // Send soft reset to stop/cancel any active operation
+    // Route STOP through backend-controlled job stop path
     await api.sendCommandViaWebSocket({
-      command: '\x18'
+      command: '\x18',
+      meta: { jobControl: true }
     });
   } catch (error) {
     console.error('Error stopping job:', error);
