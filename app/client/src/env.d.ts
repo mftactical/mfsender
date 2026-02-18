@@ -1,3 +1,7 @@
+/// <reference types="vite/client" />
+
+import type { DefineComponent } from 'vue';
+
 /*
  * This file is part of mfsender.
  *
@@ -33,10 +37,12 @@ interface UpdateAvailablePayload {
   releaseName?: string | null;
   releaseDate?: string | null;
   releaseNotes?: string | null;
+  sourceUrl?: string | null;
   channel?: string;
   canInstall?: boolean;
   currentVersion?: string;
   downloadPath?: string;
+  autoInstallRequested?: boolean;
 }
 
 interface UpdateProgressPayload {
@@ -58,6 +64,12 @@ interface mfsenderUpdatesAPI {
   onDownloadStarted: (callback: (payload: any) => void) => () => void;
   onDownloadProgress: (callback: (payload: UpdateProgressPayload) => void) => () => void;
   onDownloaded: (callback: (payload: UpdateAvailablePayload & { downloadedAt?: string }) => void) => () => void;
+  onInstalling?: (callback: (payload: any) => void) => () => void;
+}
+
+declare module '*.vue' {
+  const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, any>;
+  export default component;
 }
 
 interface mfsenderAPI {
