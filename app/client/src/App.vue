@@ -303,8 +303,8 @@
                 <label class="setting-label">Accent / Gradient Color</label>
                 <div class="color-controls">
                   <div class="color-picker-container">
-                    <input type="color" class="color-picker" :value="accentColor" @input="updateAccentColor($event.target.value)" @change="saveColors">
-                    <input type="color" class="color-picker" :value="gradientColor" @input="updateGradientColor($event.target.value)" @change="saveColors">
+                    <input type="color" class="color-picker" :value="accentColor" @input="updateAccentColor(($event.target as HTMLInputElement).value)" @change="saveColors">
+                    <input type="color" class="color-picker" :value="gradientColor" @input="updateGradientColor(($event.target as HTMLInputElement).value)" @change="saveColors">
                   </div>
                   <button class="reset-colors-button" @click="resetColors">Reset</button>
                 </div>
@@ -441,7 +441,7 @@
           <!-- Error State -->
           <div v-else-if="firmwareError" class="firmware-error">
             <p class="error-message">{{ firmwareError }}</p>
-            <button @click="loadFirmwareData" class="retry-button">Retry</button>
+            <button @click="loadFirmwareData()" class="retry-button">Retry</button>
           </div>
 
           <!-- No Data State (Not Connected) -->
@@ -594,8 +594,8 @@
                         <input
                           type="number"
                           :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value !== undefined ? setting.value : '')"
-                          @input="updateNumericSetting(setting, $event.target.value)"
-                          @keydown.enter="$event.target.blur()"
+                          @input="updateNumericSetting(setting, ($event.target as HTMLInputElement).value)"
+                          @keydown.enter="($event.target as HTMLInputElement).blur()"
                           :min="(setting.halDetails && setting.halDetails[8] === '1') ? undefined : (setting.min || undefined)"
                           :max="setting.max || undefined"
                           step="1"
@@ -609,8 +609,8 @@
                         <input
                           type="number"
                           :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value !== undefined ? setting.value : '')"
-                          @input="updateNumericSetting(setting, $event.target.value)"
-                          @keydown.enter="$event.target.blur()"
+                          @input="updateNumericSetting(setting, ($event.target as HTMLInputElement).value)"
+                          @keydown.enter="($event.target as HTMLInputElement).blur()"
                           :min="(setting.halDetails && setting.halDetails[8] === '1') ? undefined : (setting.min || undefined)"
                           :max="setting.max || undefined"
                           step="any"
@@ -626,8 +626,8 @@
                           <input
                             type="text"
                             :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value || '')"
-                            @input="updateMacAddress(setting, $event.target.value)"
-                            @keydown.enter="$event.target.blur()"
+                            @input="updateMacAddress(setting, ($event.target as HTMLInputElement).value)"
+                            @keydown.enter="($event.target as HTMLInputElement).blur()"
                             :maxlength="setting.max ? parseInt(setting.max) : undefined"
                             :class="['setting-string-input', { 'has-changes': firmwareChanges[setting.id] !== undefined }]"
                             placeholder="XX:XX:XX:XX:XX:XX"
@@ -638,8 +638,8 @@
                           <input
                             type="text"
                             :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value || '')"
-                            @input="updateGcodeString(setting, $event.target.value)"
-                            @keydown.enter="$event.target.blur()"
+                            @input="updateGcodeString(setting, ($event.target as HTMLInputElement).value)"
+                            @keydown.enter="($event.target as HTMLInputElement).blur()"
                             :maxlength="setting.max ? parseInt(setting.max) : undefined"
                             :class="['setting-string-input', { 'has-changes': firmwareChanges[setting.id] !== undefined }]"
                             placeholder="G-code commands (use | as separator)"
@@ -671,8 +671,8 @@
                         <input
                           type="text"
                           :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value || '')"
-                          @input="updateStringSetting(setting, $event.target.value)"
-                          @keydown.enter="$event.target.blur()"
+                          @input="updateStringSetting(setting, ($event.target as HTMLInputElement).value)"
+                          @keydown.enter="($event.target as HTMLInputElement).blur()"
                           :minlength="setting.min ? parseInt(setting.min) : undefined"
                           :maxlength="setting.max ? parseInt(setting.max) : undefined"
                           :class="['setting-string-input', { 'has-changes': firmwareChanges[setting.id] !== undefined }]"
@@ -685,8 +685,8 @@
                         <input
                           type="text"
                           :value="firmwareChanges[setting.id] !== undefined ? firmwareChanges[setting.id] : (setting.value || '')"
-                          @input="updateIpAddress(setting, $event.target.value)"
-                          @keydown.enter="$event.target.blur()"
+                          @input="updateIpAddress(setting, ($event.target as HTMLInputElement).value)"
+                          @keydown.enter="($event.target as HTMLInputElement).blur()"
                           maxlength="15"
                           :class="['setting-string-input', { 'has-changes': firmwareChanges[setting.id] !== undefined }]"
                           placeholder="192.168.1.1"
@@ -1549,12 +1549,30 @@ const deleteAuxOutput = async (index: number) => {
 };
 
 // Firmware settings
-const firmwareData = ref(null);
+type FirmwareSetting = {
+  id: string | number;
+  value?: string | number | boolean | null;
+  name?: string;
+  unit?: string;
+  min?: string;
+  max?: string;
+  format?: string;
+  dataType?: number;
+  halDetails?: string[];
+  group?: { name?: string };
+};
+
+type FirmwareData = {
+  timestamp: string;
+  settings: Record<string, FirmwareSetting>;
+};
+
+const firmwareData = ref<FirmwareData | null>(null);
 const isFirmwareLoading = ref(false);
-const firmwareError = ref(null);
+const firmwareError = ref<string | null>(null);
 const firmwareSearchQuery = ref('');
-const firmwareChanges = ref({}); // Track pending changes: { settingId: newValue }
-const importSummary = ref(null); // { changed: number, total: number }
+const firmwareChanges = ref<Record<string, string | number | boolean>>({}); // Track pending changes: { settingId: newValue }
+const importSummary = ref<{ changed: number; total: number } | null>(null); // { changed: number, total: number }
 
 const AXIS_BIT_LABELS = ['X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W'];
 const axisCount = computed(() => {
@@ -1841,9 +1859,9 @@ const filteredFirmwareSettings = computed(() => {
   }
 
   const settings = Object.values(firmwareData.value.settings)
-    .map((setting) => ({
+    .map((setting): FirmwareSetting & { id: string } => ({
       ...setting,
-      id: setting.id.toString()
+      id: String(setting.id)
     }))
     .filter((setting) => {
       // Skip settings with dataType 7 (bitfield) that don't have a format
@@ -1967,8 +1985,14 @@ const getAxisBitLabels = (setting: any): string[] => {
 };
 
 // Helper function to check if a bit is set
-const isBitSet = (value: string | number, bitIndex: number): boolean => {
-  const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+const isBitSet = (value: string | number | boolean | null | undefined, bitIndex: number): boolean => {
+  const numValue = typeof value === 'string'
+    ? parseInt(value, 10)
+    : typeof value === 'number'
+      ? value
+      : value === true
+        ? 1
+        : 0;
   return ((numValue >> bitIndex) & 1) === 1;
 };
 
@@ -2232,17 +2256,25 @@ const importFirmwareSettings = () => {
   input.accept = '.json,.grbl,.txt';
 
   input.onchange = async (e) => {
-    const file = e.target.files[0];
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (!file) return;
 
     try {
       const text = await file.text();
-      let importedSettings = {};
+      let importedSettings: Record<string, string | number | boolean> = {};
 
       // Auto-detect format: try JSON first, then fallback to GRBL text format
       try {
         // Try parsing as JSON
-        importedSettings = JSON.parse(text);
+        const parsed = JSON.parse(text) as Record<string, unknown>;
+        importedSettings = Object.fromEntries(
+          Object.entries(parsed).filter(([, value]) => (
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            typeof value === 'boolean'
+          ))
+        ) as Record<string, string | number | boolean>;
       } catch (jsonError) {
         // Not JSON, parse as GRBL text format ($<id>=<value>)
         const lines = text.split('\n');
@@ -2678,7 +2710,7 @@ const saveSetupSettings = async () => {
       connection: {
         type: setupSettings.type?.toLowerCase() || 'usb',
         ip: setupSettings.ipAddress || '192.168.5.1',
-        port: parseInt(setupSettings.port, 10) || 23,
+        port: Number(setupSettings.port) || 23,
         serverPort: 8090,
         usbPort: setupSettings.usbPort || '',
         baudRate: parseInt(setupSettings.baudRate, 10) || 115200
