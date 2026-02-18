@@ -464,6 +464,7 @@ import { api } from '../../lib/api.js';
 import { updateSettings } from '../../lib/settings-store.js';
 import { startProbe as startProbeOperation, stopProbe } from './api';
 import { useAppStore } from '../../composables/use-app-store';
+import type { ProbingAxis, ProbeCorner, ProbeSide } from './visualizers/types';
 
 // Props
 interface Props {
@@ -484,9 +485,9 @@ const probeType = ref<'3d-probe' | 'standard-block' | 'autozero-touch'>('autozer
 const ballPointDiameter = ref(2);
 const zPlunge = ref(3);
 const zOffset = ref(-0.1);
-const probingAxis = ref('Z');
-const selectedCorner = ref<string | null>(null);
-const selectedSide = ref<string | null>(null);
+const probingAxis = ref<ProbingAxis>('Z');
+const selectedCorner = ref<ProbeCorner | null>(null);
+const selectedSide = ref<ProbeSide | null>(null);
 const xDimension = ref(100);
 const yDimension = ref(100);
 const rapidMovement = ref(2000);
@@ -763,7 +764,7 @@ const handleZProbeDistanceBlur = async () => {
   }
 };
 
-const isSideValidForAxis = (axis: string, side: string | null) => {
+const isSideValidForAxis = (axis: ProbingAxis, side: ProbeSide | null) => {
   if (!side) return false;
   if (axis === 'X') {
     return side === 'Left' || side === 'Right';
@@ -774,7 +775,7 @@ const isSideValidForAxis = (axis: string, side: string | null) => {
   return false;
 };
 
-const applyAutoZeroSideDefault = (axis: string) => {
+const applyAutoZeroSideDefault = (axis: ProbingAxis) => {
   const supportsSides = axis === 'X' || axis === 'Y';
   if (!supportsSides) {
     selectedSide.value = null;
@@ -799,7 +800,7 @@ const applyAutoZeroSideDefault = (axis: string) => {
   }
 };
 
-const applyCornerDefault = (axis: string) => {
+const applyCornerDefault = (axis: ProbingAxis) => {
   if (['XYZ', 'XY'].includes(axis) && !selectedCorner.value) {
     selectedCorner.value = 'BottomLeft';
   }
@@ -862,12 +863,12 @@ watch(() => selectedSide.value, async (value) => {
   }
 });
 
-const loadSideForAxis = async (axis: string) => {
+const loadSideForAxis = async (axis: ProbingAxis) => {
   if (axis === 'X' || axis === 'Y') {
     try {
       const settings = await api.getSettings();
       const settingKey = axis === 'X' ? 'selectedXSide' : 'selectedYSide';
-      const persistedSide = settings?.probe?.[settingKey];
+      const persistedSide = settings?.probe?.[settingKey] as ProbeSide | undefined;
       const defaultSide = axis === 'X' ? 'Left' : 'Front';
 
       selectedSide.value = persistedSide || defaultSide;
@@ -960,10 +961,16 @@ watch(() => props.show, async (isShown) => {
           probeType.value = settings.probe.type;
         }
         if (settings.probe?.probingAxis) {
-          probingAxis.value = settings.probe.probingAxis;
+          const axis = settings.probe.probingAxis as ProbingAxis;
+          if (['Z', 'XYZ', 'XY', 'X', 'Y', 'Center - Inner', 'Center - Outer'].includes(axis)) {
+            probingAxis.value = axis;
+          }
         }
         if (settings.probe?.selectedCorner) {
-          selectedCorner.value = settings.probe.selectedCorner;
+          const corner = settings.probe.selectedCorner as ProbeCorner;
+          if (['TopRight', 'TopLeft', 'BottomRight', 'BottomLeft'].includes(corner)) {
+            selectedCorner.value = corner;
+          }
         }
         const shouldDefaultProbeType = settings.probe?.typeInitialized !== true && settings.probe?.type === '3d-probe';
         if (shouldDefaultProbeType) {
@@ -1280,13 +1287,13 @@ const handleStartProbe = async () => {
       probingAxis: probingAxis.value,
       selectedCorner: selectedCorner.value,
       selectedSide: selectedSide.value,
-      xDimension: xDimension.value,
-      yDimension: yDimension.value,
-      rapidMovement: rapidMovement.value,
+      probeXDimension: xDimension.value,
+      probeYDimension: yDimension.value,
+      probeRapidMovement: rapidMovement.value,
       probeZFirst: probeZFirst.value,
-      toolDiameter: ballPointDiameter.value || 6,
-      zPlunge: zPlunge.value,
-      zOffset: zOffset.value,
+      probeBallPointDiameter: ballPointDiameter.value || 6,
+      probeZPlunge: zPlunge.value,
+      probeZOffset: zOffset.value,
       selectedBitDiameter: selectedBitDiameter.value,
       zThickness: zThickness.value,
       xyThickness: xyThickness.value,

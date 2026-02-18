@@ -16,28 +16,54 @@
  */
 
 import { api } from '../../lib/api.js';
+import type { ProbeType, ProbingAxis, ProbeCorner, ProbeSide } from './visualizers/types';
 
 export interface ProbeOptions {
-  probingAxis: string;
-  probeSelectedCorner?: string | null;
-  probeSelectedSide?: string | null;
+  probeType: ProbeType;
+  probingAxis: ProbingAxis;
+  selectedCorner?: ProbeCorner | null;
+  selectedSide?: ProbeSide | null;
   probeBallPointDiameter: number;
   probeZPlunge: number;
   probeZOffset: number;
+  probeRapidMovement: number;
   probeXDimension?: number;
   probeYDimension?: number;
-  probeRapidMovement: number;
   probeZFirst?: boolean;
+  selectedBitDiameter?: string;
+  zThickness?: number;
+  xyThickness?: number;
+  zProbeDistance?: number;
+  standardBlockBitDiameter?: string;
 }
 
 /**
  * Start a probing operation
  */
 export async function startProbe(options: ProbeOptions) {
+  const payload = {
+    probeType: options.probeType,
+    probingAxis: options.probingAxis,
+    selectedCorner: options.selectedCorner ?? undefined,
+    selectedSide: options.selectedSide ?? undefined,
+    toolDiameter: options.probeBallPointDiameter,
+    zPlunge: options.probeZPlunge,
+    zOffset: options.probeZOffset,
+    rapidMovement: options.probeRapidMovement,
+    xDimension: options.probeXDimension,
+    yDimension: options.probeYDimension,
+    probeZFirst: options.probeZFirst,
+    selectedBitDiameter: options.selectedBitDiameter,
+    zThickness: options.zThickness,
+    xyThickness: options.xyThickness,
+    zProbeDistance: options.zProbeDistance,
+    standardBlockBitDiameter: options.standardBlockBitDiameter
+  };
+
   const response = await fetch(`${api.baseUrl}/api/probe/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(options)
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
