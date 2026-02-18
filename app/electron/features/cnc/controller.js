@@ -1299,6 +1299,10 @@ export class CNCController extends EventEmitter {
 
       this.emit('command-queued', pendingPayload);
 
+      if (finalCommand === '\x18' && normalizedMeta?.jobControl === true) {
+        return await this.stopControlled();
+      }
+
       const isAlarmState = (this.lastStatus?.status === 'Alarm') || (typeof this.rawData === 'string' && this.rawData.startsWith('<Alarm'));
       const isHomingRequired = (this.lastSeenAlarmCode === 11) || (this.lastSeenAlarmCode == null && isAlarmState);
       if (finalCommand === '\x18' && isHomingRequired) {
@@ -1538,5 +1542,22 @@ export class CNCController extends EventEmitter {
     }
 
     this.emitConnectionStatus(this.connectionStatus, false);
+  }
+
+  async stopControlled() {
+    // App-level stop without firmware reset.
+    this.flushQueue('stop');
+    this.emit('stop');
+  }
+
+  async emergencyReset() {
+    // Firmware soft reset (Ctrl+X)
+    await this.writeToConnection('\x18', {
+      rawCommand: '\x18',
+      isRealTime: true
+    });
+
+    this.flushQueue('reset');
+    this.emit('stop');
   }
 }
