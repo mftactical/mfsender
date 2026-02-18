@@ -49,7 +49,7 @@ const props = withDefaults(defineProps<{
   showCancel?: boolean;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'primary' | 'danger';
+  variant?: 'primary' | 'danger' | 'warning';
 }>(), {
   showConfirm: true,
   showCancel: true,
@@ -63,6 +63,8 @@ defineEmits<{ (e: 'confirm'): void; (e: 'cancel'): void }>();
 const confirmClass = computed(() => (
   props.variant === 'danger'
     ? 'confirm-dialog__btn--danger'
+    : props.variant === 'warning'
+      ? 'confirm-dialog__btn--warning'
     : 'confirm-dialog__btn--primary'
 ));
 </script>
@@ -138,6 +140,11 @@ const confirmClass = computed(() => (
 .confirm-dialog__btn--primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(26, 188, 156, 0.25);
+}
+
+.confirm-dialog__btn--warning {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #1a1a1a;
 }
 </style>
 
