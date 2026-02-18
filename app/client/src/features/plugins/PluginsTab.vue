@@ -288,6 +288,9 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
   <!-- Uninstall Confirmation Dialog -->
   <Dialog v-if="showUninstallConfirm && selectedPlugin" @close="showUninstallConfirm = false" :show-header="false" size="small">
     <ConfirmPanel
@@ -576,6 +579,7 @@
       </div>
     </div>
   </Dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
