@@ -910,8 +910,8 @@ class NCClient {
 
   async triggerTLS() {
     return this.sendCommandViaWebSocket({
-      command: '$TLS',
-      displayCommand: '$TLS',
+      command: 'MFSENDER_TLS',
+      displayCommand: 'MFSENDER_TLS',
       meta: { sourceId: 'tls' }
     });
   }

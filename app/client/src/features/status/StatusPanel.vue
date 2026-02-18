@@ -569,7 +569,7 @@ onUnmounted(() => {
 // TLR warning dialog handlers
 const handleTlsFromWarning = async () => {
   showTlrWarningDialog.value = false;
-  await api.sendCommandViaWebSocket({ command: '$TLS' });
+  await api.triggerTLS();
 };
 
 const handleZeroZAnyway = () => {

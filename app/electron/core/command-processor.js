@@ -136,9 +136,6 @@ export class CommandProcessor {
     const m6Parse = parseM6Command(command);
     const isValidM6 = m6Parse?.matched && m6Parse.toolNumber !== null;
 
-    // Check if this is a $TLS command (case insensitive)
-    const isTLSCommand = command.trim().toUpperCase() === '$TLS';
-
     // Check for same-tool M6 command
     const currentTool = machineState?.tool ?? this.cncController.lastStatus?.tool ?? 0;
     const sameToolCheck = checkSameToolChange(command, currentTool);
@@ -176,25 +173,6 @@ export class CommandProcessor {
         if (m6ReturnPosition) {
           log(`Saved M6 return position (MPos): X${m6ReturnPosition.x.toFixed(3)} Y${m6ReturnPosition.y.toFixed(3)}`);
         }
-      }
-    }
-
-    // Save original position for return after $TLS
-    let tlsReturnPosition = null;
-    if (isTLSCommand) {
-      const mpos = machineState?.MPos || this.serverState?.machineState?.MPos;
-      tlsReturnPosition = parseMachinePosition(mpos);
-      if (tlsReturnPosition) {
-        log(`Saved TLS return position: X${tlsReturnPosition.x.toFixed(3)} Y${tlsReturnPosition.y.toFixed(3)}`);
-      }
-    }
-
-    // Set isToolChanging flag for $TLS commands
-    if (isTLSCommand) {
-      if (this.serverState.machineState.isToolChanging !== true) {
-        log('Setting isToolChanging -> true ($TLS)');
-        this.serverState.machineState.isToolChanging = true;
-        this.broadcast('server-state-updated', this.serverState);
       }
     }
 
@@ -265,25 +243,6 @@ export class CommandProcessor {
             returnCmd = `G53 G21 G0 X${m6ReturnPosition.x.toFixed(3)} Y${m6ReturnPosition.y.toFixed(3)}`;
           }
           log(`Adding M6 return command: ${returnCmd}`);
-          commands.push({
-            command: returnCmd,
-            displayCommand: returnCmd,
-            isOriginal: false
-          });
-        }
-        commands.push({
-          command: '(MSG, TOOL_CHANGE_COMPLETE)',
-          displayCommand: null,
-          isOriginal: false
-        });
-      }
-
-      // If this is a $TLS command, add return-to-position and TOOL_CHANGE_COMPLETE
-      if (isTLSCommand) {
-        // Add return-to-position command before TOOL_CHANGE_COMPLETE
-        if (tlsReturnPosition) {
-          const returnCmd = `G53 G21 G0 X${tlsReturnPosition.x.toFixed(3)} Y${tlsReturnPosition.y.toFixed(3)}`;
-          log(`Adding TLS return command: ${returnCmd}`);
           commands.push({
             command: returnCmd,
             displayCommand: returnCmd,

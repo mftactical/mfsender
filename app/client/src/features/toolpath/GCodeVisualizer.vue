@@ -2394,7 +2394,7 @@ const openProbeDialog = () => {
 // Handle TLS from warning dialog
 const handleTlsFromWarning = async () => {
   showTlrWarningDialog.value = false;
-  await api.sendCommandViaWebSocket({ command: '$TLS' });
+  await api.triggerTLS();
 };
 
 // Control button handlers
@@ -3178,7 +3178,7 @@ const startToolPress = (toolNumber: number | string, _evt?: Event) => {
     if (elapsed >= LONG_PRESS_MS_TOOL && !state.triggered) {
       state.triggered = true;
 
-      // Handle TLS specially - send $TLS command directly
+      // Handle TLS specially
       if (toolNumber === 'tls') {
         sendTLSCommand();
         state.progress = 0;
