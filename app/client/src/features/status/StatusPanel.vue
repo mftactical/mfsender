@@ -661,12 +661,14 @@ h2, h3 {
   padding: 2px;
 }
 
+/* 3 axes (X | XY | Y | Z) */
 .axis-cols-3 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr auto 1fr 1fr;
 }
 
+/* 4 axes (X | XY | Y | Z | A) */
 .axis-cols-4 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr auto 1fr 1fr 1fr;
 }
 
 /* Z card needs left margin to separate from XY group */
