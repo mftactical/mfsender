@@ -124,6 +124,22 @@
             <div class="machine-coord">{{ formatCoordinate(machineValues.z, appStore.unitsPreference.value) }}</div>
           </div>
         </div>
+
+        <!-- A Card -->
+        <div
+          v-if="showAxisA"
+          :class="['axis-display', { 'axis-disabled': axisControlsDisabled } ]"
+        >
+          <span class="axis-label">A</span>
+          <div class="coord-values">
+            <div class="work-coord">
+              {{ formatCoordinate(axisValues.a, appStore.unitsPreference.value) }}
+            </div>
+            <div class="machine-coord">
+              {{ formatCoordinate(machineValues.a, appStore.unitsPreference.value) }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="metrics">
@@ -237,6 +253,7 @@ const axisControlsDisabled = computed(() => cardDisabled.value || isJobRunning.v
 // TLR warning state for Z axis zeroing
 const showTlrWarningDialog = ref(false);
 const isTlsEnabled = computed(() => settingsStore.data?.tool?.tls === true);
+const showAxisA = computed(() => settingsStore.data?.showAxisA === true);
 const toolLengthSet = computed(() => appStore.status.toolLengthSet === true);
 const currentTool = computed(() => appStore.status.tool ?? 0);
 
@@ -258,13 +275,15 @@ const props = defineProps<{
 const axisValues = computed(() => ({
   x: Number(props.status.workCoords.x ?? 0),
   y: Number(props.status.workCoords.y ?? 0),
-  z: Number(props.status.workCoords.z ?? 0)
+  z: Number(props.status.workCoords.z ?? 0),
+  a: Number(props.status.workCoords.a ?? 0)
 }) as Record<string, number>);
 
 const machineValues = computed(() => ({
   x: Number(props.status.machineCoords.x ?? 0),
   y: Number(props.status.machineCoords.y ?? 0),
-  z: Number(props.status.machineCoords.z ?? 0)
+  z: Number(props.status.machineCoords.z ?? 0),
+  a: Number(props.status.machineCoords.a ?? 0)
 }) as Record<string, number>);
 
 // Axis value editing state

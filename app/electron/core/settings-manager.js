@@ -104,7 +104,8 @@ const DEFAULT_SETTINGS = {
   clearanceHeight: 5,
   probeDepth: 25,
   probeFeed: 100,
-  offsetZ: 0.7535
+  offsetZ: 0.7535,
+  showAxisA: false
 };
 
 function getUserDataDir() {
