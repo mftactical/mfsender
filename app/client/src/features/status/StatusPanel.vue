@@ -20,7 +20,10 @@
     <div class="status-hint">Press and hold an axis card to zero it at the current position</div>
     <div class="coords">
       <!-- All axes in one row: X | XY | Y | Z -->
-      <div class="axis-row">
+      <div
+        class="axis-row"
+        :class="`axis-cols-${visibleAxisCount}`"
+      >
         <!-- X Card -->
         <div
           :class="['axis-display', { 'axis-disabled': axisControlsDisabled } ]"
@@ -254,6 +257,9 @@ const axisControlsDisabled = computed(() => cardDisabled.value || isJobRunning.v
 const showTlrWarningDialog = ref(false);
 const isTlsEnabled = computed(() => settingsStore.data?.tool?.tls === true);
 const showAxisA = computed(() => settingsStore.data?.showAxisA === true);
+const visibleAxisCount = computed(() => {
+  return showAxisA.value ? 4 : 3;
+});
 const toolLengthSet = computed(() => appStore.status.toolLengthSet === true);
 const currentTool = computed(() => appStore.status.tool ?? 0);
 
@@ -648,12 +654,19 @@ h2, h3 {
 
 .axis-row {
   display: grid;
-  grid-template-columns: 1fr auto 1fr 1fr;
+  gap: 8px;
   align-items: stretch;
-  gap: 0;
   border: none;
   border-radius: var(--radius-small);
   padding: 2px;
+}
+
+.axis-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.axis-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 /* Z card needs left margin to separate from XY group */
