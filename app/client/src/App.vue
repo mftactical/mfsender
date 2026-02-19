@@ -300,6 +300,16 @@
                 </select>
               </div>
               <div class="setting-item">
+                <label class="setting-label">
+                  <input
+                    type="checkbox"
+                    :checked="settingsStore.data?.showAxisA === true"
+                    @change="onShowAxisAChange"
+                  />
+                  Show A Axis
+                </label>
+              </div>
+              <div class="setting-item">
                 <label class="setting-label">Accent / Gradient Color</label>
                 <div class="color-controls">
                   <div class="color-picker-container">
@@ -1006,7 +1016,7 @@ import ToggleSwitch from './components/ToggleSwitch.vue';
 import UpdateDialog from './components/UpdateDialog.vue';
 import { api } from './lib/api.js';
 import { getApiBaseUrl } from './lib/api-base';
-import { getSettings } from './lib/settings-store.js';
+import { getSettings, settingsStore } from './lib/settings-store.js';
 import { getPluginsFromInit } from './lib/init';
 import { useAppStore } from './composables/use-app-store';
 import { useUpdateCenter } from './composables/use-update-center';
@@ -2476,6 +2486,12 @@ const savePauseBeforeStop = async () => {
   await updateSettings({
     pauseBeforeStop: Number(pauseBeforeStop.value)
   });
+};
+
+const onShowAxisAChange = async (event: Event) => {
+  const checked = (event.target as HTMLInputElement | null)?.checked === true;
+  const { updateSettings } = await import('./lib/settings-store.js');
+  await updateSettings({ showAxisA: checked });
 };
 
 // Watch debugLogging and save changes
