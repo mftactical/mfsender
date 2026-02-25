@@ -74,8 +74,17 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
   };
 
   const runTLO = async () => {
-    logger('[TLO] runTLO called before full engine wiring');
-    throw new Error('TLO engine is not fully initialized');
+    if (tloState.running === true) {
+      throw new Error('TLO already running');
+    }
+
+    tloState.running = true;
+    try {
+      logger('[TLO] runTLO called before full engine wiring');
+      throw new Error('TLO engine is not fully initialized');
+    } finally {
+      tloState.running = false;
+    }
   };
 
   const readSetting = (key, fallback = undefined) => {
