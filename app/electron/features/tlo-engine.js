@@ -79,6 +79,11 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
     publishState();
   };
 
+  const clearDirty = () => {
+    tloState.dirty = false;
+    publishState();
+  };
+
   function canRunTLO() {
     const status = controller?.lastStatus?.status;
     const homed = controller?.lastStatus?.homed;
@@ -154,8 +159,7 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
       await controller.sendCommand(`G53 G0 Z${settings.safeZ}`);
 
       tloState.previousToolMposZ = newToolMposZ;
-      tloState.dirty = false;
-      publishState();
+      clearDirty();
       return { success: true, delta, newToolMposZ };
     } finally {
       tloState.running = false;
@@ -175,6 +179,7 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
     refreshTLOActiveFromDollarG,
     setBaselineFromCurrentMposZ,
     markDirty,
+    clearDirty,
     runTLO,
     readSetting
   };

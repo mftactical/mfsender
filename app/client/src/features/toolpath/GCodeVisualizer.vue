@@ -3156,8 +3156,16 @@ const startToolPress = (toolNumber: number | string, _evt?: Event) => {
         // Manual tool - use a number greater than numberOfToolsToShow
         toolToLoad = props.currentTool > numberOfToolsToShow.value ? 0 : numberOfToolsToShow.value + 1;
       } else if (toolNumber === 'probe') {
-        // Probe tool - T99 is reserved for probe
-        toolToLoad = props.currentTool === 99 ? 0 : 99;
+        const tool = (props.machineState as any)?.currentTool ?? props.currentTool;
+        if (!tool || tool === 0) {
+          state.progress = 0;
+          state.active = false;
+          return;
+        }
+        sendDynamicToolChange(tool);
+        state.progress = 0;
+        state.active = false;
+        return;
       } else {
         // Regular numbered tool - if this is the current tool, send T0 to unload, otherwise send the tool number
         toolToLoad = props.currentTool === toolNumber ? 0 : toolNumber as number;
@@ -3214,6 +3222,14 @@ const sendToolChangeMacro = async (toolNumber: number) => {
     await api.triggerToolChange(toolNumber);
   } catch (error) {
     console.error('[GCodeVisualizer] Failed to request tool change macro', error);
+  }
+};
+
+const sendDynamicToolChange = async (toolNumber: number) => {
+  try {
+    await api.sendCommand(`M6 T${toolNumber}`);
+  } catch (error) {
+    console.error('[GCodeVisualizer] Failed to request dynamic tool change', error);
   }
 };
 
