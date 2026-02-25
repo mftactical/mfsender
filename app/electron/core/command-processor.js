@@ -16,7 +16,7 @@
  */
 
 import fs from 'node:fs/promises';
-import { checkSameToolChange, parseM6Command, parseM98Command, isSpindleStartCommand, isSpindleStopCommand } from '../utils/gcode-patterns.js';
+import { parseM6Command, parseM98Command, isSpindleStartCommand, isSpindleStopCommand } from '../utils/gcode-patterns.js';
 import { createLogger } from './logger.js';
 import { M98Expander } from '../features/macro/m98-expander.js';
 import { isValidMacroId, normalizeMacroId } from '../features/macro/m98-storage.js';
@@ -33,7 +33,7 @@ const M98_MAX_DEPTH = 16;
  *
  * Handles pre-processing of user commands before they reach the Plugin Manager.
  * This is the single point for command interception logic like:
- * - Same-tool M6 detection and skipping
+ * - M6 command handling
  * - Command validation
  * - Rate limiting
  * - Safety checks
@@ -58,7 +58,7 @@ export class CommandProcessor {
    * @returns {Promise<Object>} Result object with shouldContinue flag
    *
    * Result structure:
-   * - If command should be skipped (e.g., same-tool M6):
+   * - If command should be skipped:
    *   { shouldContinue: false, result: { status, id, ... } }
    *
    * - If command should continue to controller:
@@ -150,10 +150,6 @@ export class CommandProcessor {
     const m6Parse = parseM6Command(command);
     const isValidM6 = m6Parse?.matched && m6Parse.toolNumber !== null;
 
-    // Check for same-tool M6 command
-    const currentTool = machineState?.tool ?? this.cncController.lastStatus?.tool ?? 0;
-    const sameToolCheck = checkSameToolChange(command, currentTool);
-
     // Helper to parse machine position
     const parseMachinePosition = (mpos) => {
       if (!mpos) return null;
@@ -173,7 +169,7 @@ export class CommandProcessor {
     // Priority: 1) nextXYPosition from G-code (program execution), 2) MPos (manual invocation)
     let m6ReturnPosition = null;
     let m6UseWorkCoordinates = false;
-    if (isValidM6 && !sameToolCheck.isSameTool) {
+    if (isValidM6) {
       // Check if job-routes passed the next XY position from G-code
       const nextXY = meta?.nextXYPosition;
       if (nextXY && (Number.isFinite(nextXY.x) || Number.isFinite(nextXY.y))) {
@@ -190,8 +186,8 @@ export class CommandProcessor {
       }
     }
 
-    // Set isToolChanging flag only for valid M6 commands that are NOT same-tool changes
-    if (isValidM6 && !sameToolCheck.isSameTool) {
+    // Set isToolChanging flag for valid M6 commands
+    if (isValidM6) {
       if (this.serverState.machineState.isToolChanging !== true) {
         log(`Setting isToolChanging -> true (M6 T${m6Parse.toolNumber})`);
         this.serverState.machineState.isToolChanging = true;
@@ -199,51 +195,12 @@ export class CommandProcessor {
       }
     }
 
-    if (sameToolCheck.isSameTool) {
-      log(`Same-tool M6 detected: T${sameToolCheck.toolNumber} (current: T${currentTool}) - skipping`);
-
-      // Create skip message
-      const skipMessage = `M6 T${sameToolCheck.toolNumber}; Skipped, target tool is the same as the current tool.`;
-
-      // Broadcast cnc-command (pending status)
-      this.broadcast('cnc-command', {
-        id: commandId,
-        command: command.trim().toUpperCase(),
-        displayCommand: skipMessage,
-        status: 'pending',
-        timestamp: new Date().toISOString(),
-        sourceId: meta.sourceId || 'client'
-      });
-
-      // Broadcast cnc-command-result (success status)
-      this.broadcast('cnc-command-result', {
-        id: commandId,
-        command: command.trim().toUpperCase(),
-        displayCommand: skipMessage,
-        status: 'success',
-        timestamp: new Date().toISOString(),
-        sourceId: meta.sourceId || 'client'
-      });
-
-      // Return early - don't continue to Plugin Manager or Controller
-      return {
-        shouldContinue: false,
-        result: {
-          status: 'success',
-          id: commandId,
-          command: command.trim().toUpperCase(),
-          displayCommand: skipMessage,
-          timestamp: new Date().toISOString()
-        }
-      };
-    }
-
     // No early return needed - process through Plugin Manager
     try {
       const commands = await this.pluginManager.processCommand(command, context);
 
       // If this is a valid M6 command, add return-to-position and TOOL_CHANGE_COMPLETE
-      if (isValidM6 && !sameToolCheck.isSameTool) {
+      if (isValidM6) {
         // Add return-to-position command before TOOL_CHANGE_COMPLETE
         if (m6ReturnPosition) {
           let returnCmd;
