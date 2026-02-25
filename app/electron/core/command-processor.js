@@ -21,6 +21,7 @@ import { getSetting } from './settings-manager.js';
 import { createLogger } from './logger.js';
 import { M98Expander } from '../features/macro/m98-expander.js';
 import { isValidMacroId, normalizeMacroId } from '../features/macro/m98-storage.js';
+import { getTLOEngine } from '../features/tlo-engine.js';
 
 const { log, error: logError } = createLogger('CommandProcessor');
 
@@ -133,7 +134,12 @@ export class CommandProcessor {
     }
 
     if (command.trim().toUpperCase() === 'MFSENDER_TLS') {
-      return this.runToolLengthSetterFluidNC(commandId, meta, machineState);
+      const engine = getTLOEngine();
+      if (!engine) {
+        throw new Error('TLO engine not initialized');
+      }
+      await engine.runTLO();
+      return;
     }
 
     // Check if this is a valid M6 command
