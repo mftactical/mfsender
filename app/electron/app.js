@@ -25,6 +25,7 @@ import fs from 'node:fs/promises';
 import { CNCController } from './features/cnc/controller.js';
 import { JogSessionManager } from './features/cnc/jog-manager.js';
 import { jobManager } from './features/gcode/job-manager.js';
+import * as settingsManager from './core/settings-manager.js';
 import { getSetting, saveSettings, DEFAULT_SETTINGS } from './core/settings-manager.js';
 import { getUserDataDir } from './utils/paths.js';
 import { createServerContext } from './server/context.js';
@@ -34,10 +35,12 @@ import { registerCncEventHandlers } from './server/cnc-events.js';
 import { mountHttp } from './server/http.js';
 import { pluginManager } from './core/plugin-manager.js';
 import { CommandProcessor } from './core/command-processor.js';
+import { initTLOEngine } from './features/tlo-engine.js';
 import { readFile } from 'node:fs/promises';
 import { createLogger } from './core/logger.js';
 
-const { log, error: logError } = createLogger('App');
+const logger = createLogger('App');
+const { log, error: logError } = logger;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +68,11 @@ export async function createApp(options = {}) {
   const firmwareFilePath = path.join(userDataDir, 'firmware.json');
 
   const cncController = new CNCController();
+  initTLOEngine({
+    controller: cncController,
+    settingsStore: settingsManager,
+    log: logger
+  });
 
   // Create a wrapper object that will hold commandProcessor reference
   // This allows JogManager and WebSocket layer to access it after initialization
