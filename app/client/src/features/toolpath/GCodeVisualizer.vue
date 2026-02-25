@@ -231,7 +231,7 @@
             'long-press-triggered': toolPress['probe']?.triggered,
             'blink-border': toolPress['probe']?.blinking
           }"
-          title="Probe (Hold to load T99)"
+          title="Manual Tool Length Setter"
           @mousedown="isToolActionsDisabled ? null : startToolPress('probe', $event)"
           @mouseup="isToolActionsDisabled ? null : endToolPress('probe')"
           @mouseleave="isToolActionsDisabled ? null : cancelToolPress('probe')"
@@ -240,7 +240,7 @@
           @touchcancel="isToolActionsDisabled ? null : cancelToolPress('probe')"
         >
           <div class="long-press-indicator long-press-horizontal" :style="{ width: `${toolPress['probe']?.progress || 0}%` }"></div>
-          <span class="tools-legend__label">Probe</span>
+          <span class="tools-legend__label">TLS</span>
         </div>
       </div>
 
