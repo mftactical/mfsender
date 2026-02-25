@@ -165,11 +165,7 @@
                   <ToggleSwitch :modelValue="showManualButton" @update:modelValue="$emit('update:showManualButton', $event)" :disabled="toolCountDisabled" />
                 </div>
                 <div class="setting-item">
-                  <label class="setting-label">TLS</label>
-                  <ToggleSwitch :modelValue="showTlsButton" @update:modelValue="$emit('update:showTlsButton', $event)" :disabled="toolCountDisabled" />
-                </div>
-                <div class="setting-item">
-                  <label class="setting-label">Probe</label>
+                  <label class="setting-label">Show TLS</label>
                   <ToggleSwitch :modelValue="showProbeButton" @update:modelValue="$emit('update:showProbeButton', $event)" :disabled="toolCountDisabled" />
                 </div>
               </div>
@@ -585,7 +581,6 @@ const props = defineProps<{
   maxToolCount?: number;
   toolCount?: number;
   showManualButton?: boolean;
-  showTlsButton?: boolean;
   showProbeButton?: boolean;
   toolCountDisabled?: boolean;
   toolSourceName?: string | null;
@@ -594,7 +589,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:toolCount': [value: number];
   'update:showManualButton': [value: boolean];
-  'update:showTlsButton': [value: boolean];
   'update:showProbeButton': [value: boolean];
 }>();
 
