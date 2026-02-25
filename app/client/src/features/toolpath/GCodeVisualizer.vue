@@ -226,7 +226,7 @@
           :key="'probe'"
           class="tools-legend__item probe-tool"
           :class="{
-            'active': currentTool === 99,
+            'active': (props.machineState as any)?.tloDirty === true,
             'disabled': isToolActionsDisabled,
             'long-press-triggered': toolPress['probe']?.triggered,
             'blink-border': toolPress['probe']?.blinking

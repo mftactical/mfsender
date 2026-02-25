@@ -266,6 +266,8 @@ export function registerCncEventHandlers({
         engine.tloState.previousToolMposZ != null;
       serverState.machineState.tloRunning =
         engine.tloState.running;
+      serverState.machineState.tloDirty =
+        engine.tloState.dirty;
     }
 
     const hasChanged = JSON.stringify(prevMachineState) !== JSON.stringify(serverState.machineState);

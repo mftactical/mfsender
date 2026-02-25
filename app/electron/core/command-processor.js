@@ -132,8 +132,13 @@ export class CommandProcessor {
       };
     }
 
-    if (command.trim().toUpperCase() === 'MFSENDER_TLS') {
-      const engine = getTLOEngine();
+    const trimmedCommand = command.trim().toUpperCase();
+    const engine = getTLOEngine();
+    if (trimmedCommand !== 'MFSENDER_TLS' && /\bT\d+\b/i.test(command)) {
+      engine?.markDirty?.();
+    }
+
+    if (trimmedCommand === 'MFSENDER_TLS') {
       if (!engine) {
         throw new Error('TLO engine not initialized');
       }
