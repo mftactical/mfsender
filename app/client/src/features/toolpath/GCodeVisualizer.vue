@@ -220,29 +220,6 @@
           <span class="tools-legend__label">{{ manualToolLabel }}</span>
         </div>
 
-        <!-- TLS Tool -->
-        <div
-          v-if="showTlsTool"
-          :key="'tls'"
-          class="tools-legend__item tls-tool"
-          :class="{
-            'disabled': isTlsToolDisabled,
-            'glow': shouldTLSGlow,
-            'long-press-triggered': toolPress['tls']?.triggered,
-            'blink-border': toolPress['tls']?.blinking
-          }"
-          title="TLS - Tool Length Setter (Hold to measure current tool)"
-          @mousedown="isTlsToolDisabled ? null : startToolPress('tls', $event)"
-          @mouseup="isTlsToolDisabled ? null : endToolPress('tls')"
-          @mouseleave="isTlsToolDisabled ? null : cancelToolPress('tls')"
-          @touchstart="isTlsToolDisabled ? null : startToolPress('tls', $event)"
-          @touchend="isTlsToolDisabled ? null : endToolPress('tls')"
-          @touchcancel="isTlsToolDisabled ? null : cancelToolPress('tls')"
-        >
-          <div class="long-press-indicator long-press-horizontal" :style="{ width: `${toolPress['tls']?.progress || 0}%` }"></div>
-          <span class="tools-legend__label">TLS</span>
-        </div>
-
         <!-- Probe Tool -->
         <div
           v-if="showProbeTool"
@@ -585,11 +562,6 @@ const isDoorOpenViaPn = computed(() => {
   return pnString.includes('D');
 });
 
-// TLS button should glow when a tool is loaded but tool length is not set
-const shouldTLSGlow = computed(() => {
-  return (props.currentTool ?? 0) > 0 && !props.toolLengthSet;
-});
-
 const isMachineConnected = computed(() => {
   const status = normalizedSenderStatus.value;
   return storeIsConnected.value && status !== 'setup-required' && status !== 'connecting';
@@ -636,12 +608,6 @@ const canStop = computed(() => {
 });
 
 const isToolActionsDisabled = computed(() => isToolChanging.value || isJobRunning.value || isConnecting.value || isAlarm.value || isHoming.value || store.homingCycle.value === 0 || !store.isHomed.value);
-const isTlsToolDisabled = computed(() =>
-  isToolActionsDisabled.value ||
-  (props.currentTool ?? 0) === 0 ||
-  (props.machineState as any)?.tloBaselineReady !== true ||
-  (props.machineState as any)?.tloRunning === true
-);
 const isProbeDisabled = computed(() => isJobRunning.value || isConnecting.value || isAlarm.value || isHomingRequired.value || isHoming.value);
 const isCoolantDisabled = computed(() => isConnecting.value || isAlarm.value || isHomingRequired.value || isHoming.value);
 
@@ -3184,14 +3150,6 @@ const startToolPress = (toolNumber: number | string, _evt?: Event) => {
     if (elapsed >= LONG_PRESS_MS_TOOL && !state.triggered) {
       state.triggered = true;
 
-      // Handle TLS specially
-      if (toolNumber === 'tls') {
-        sendTLSCommand();
-        state.progress = 0;
-        state.active = false;
-        return;
-      }
-
       // Determine tool number to send
       let toolToLoad: number;
       if (toolNumber === 'manual') {
@@ -3256,14 +3214,6 @@ const sendToolChangeMacro = async (toolNumber: number) => {
     await api.triggerToolChange(toolNumber);
   } catch (error) {
     console.error('[GCodeVisualizer] Failed to request tool change macro', error);
-  }
-};
-
-const sendTLSCommand = async () => {
-  try {
-    await api.triggerTLS();
-  } catch (error) {
-    console.error('[GCodeVisualizer] Failed to execute TLS', error);
   }
 };
 
