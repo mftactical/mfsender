@@ -73,15 +73,82 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
     return true;
   };
 
+  function canRunTLO() {
+    const status = controller?.lastStatus?.status;
+    const homed = controller?.lastStatus?.homed;
+
+    if (status !== 'Idle') return false;
+    if (homed !== true) return false;
+    if (!tloState.active) return false;
+    if (tloState.previousToolMposZ == null) return false;
+
+    return true;
+  }
+
   const runTLO = async () => {
-    if (tloState.running === true) {
+    if (tloState.running) {
       throw new Error('TLO already running');
+    }
+
+    if (!canRunTLO()) {
+      throw new Error('TLO gating conditions not met');
+    }
+
+    const requiredSettings = [
+      'toolSetterX',
+      'toolSetterY',
+      'safeZ',
+      'approachZ',
+      'seekRate',
+      'fineRate',
+      'retract',
+      'seekDistance',
+      'fineDistance'
+    ];
+    const settings = {};
+    for (const key of requiredSettings) {
+      const value = settingsStore?.getSetting?.(key);
+      if (value === null || value === undefined) {
+        throw new Error('Missing TLO settings');
+      }
+      settings[key] = value;
     }
 
     tloState.running = true;
     try {
-      logger('[TLO] runTLO called before full engine wiring');
-      throw new Error('TLO engine is not fully initialized');
+      await controller.sendCommand('G90');
+      await controller.sendCommand(`G53 G0 Z${settings.safeZ}`);
+      await controller.sendCommand(`G53 G0 X${settings.toolSetterX} Y${settings.toolSetterY}`);
+      await controller.sendCommand(`G53 G0 Z${settings.approachZ}`);
+      await controller.sendCommand('G91');
+      await controller.sendCommand(
+        `G38.2 Z-${settings.seekDistance} F${settings.seekRate}`,
+        { tloProbe: true }
+      );
+      await controller.sendCommand(`G1 Z${settings.retract}`);
+      await controller.sendCommand(
+        `G38.2 Z-${settings.fineDistance} F${settings.fineRate}`,
+        { tloProbe: true }
+      );
+      await controller.sendCommand('G90');
+
+      const newToolMposZ = parseMPosZ(controller);
+      if (newToolMposZ == null) {
+        throw new Error('Unable to read MPos.Z after probe');
+      }
+
+      if (tloState.previousToolMposZ == null) {
+        throw new Error('TLO baseline not set');
+      }
+
+      const delta = newToolMposZ - tloState.previousToolMposZ;
+
+      await controller.sendCommand('G49');
+      await controller.sendCommand(`G43.1 Z${delta}`);
+      await controller.sendCommand(`G53 G0 Z${settings.safeZ}`);
+
+      tloState.previousToolMposZ = newToolMposZ;
+      return { success: true, delta, newToolMposZ };
     } finally {
       tloState.running = false;
     }
