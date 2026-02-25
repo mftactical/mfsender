@@ -23,6 +23,7 @@ import { fetchAndSaveAlarmCodes } from '../features/alarms/routes.js';
 import { initializeFirmwareOnConnection } from '../features/firmware/routes.js';
 import { pluginManager } from '../core/plugin-manager.js';
 import { grblAlarms } from '../features/cnc/grbl-alarms.js';
+import { getTLOEngine } from '../features/tlo-engine.js';
 import { createLogger } from '../core/logger.js';
 
 const { log, error: logError } = createLogger('CncEvents');
@@ -256,6 +257,15 @@ export function registerCncEventHandlers({
         await removeSetting('lastAlarmCode');
         log('Cleared lastAlarmCode from settings (machine not in alarm state)');
       }
+    }
+
+    const engine = getTLOEngine();
+    if (engine) {
+      serverState.machineState.tloActive = engine.tloState.active;
+      serverState.machineState.tloBaselineReady =
+        engine.tloState.previousToolMposZ != null;
+      serverState.machineState.tloRunning =
+        engine.tloState.running;
     }
 
     const hasChanged = JSON.stringify(prevMachineState) !== JSON.stringify(serverState.machineState);
