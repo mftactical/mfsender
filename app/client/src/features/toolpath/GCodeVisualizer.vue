@@ -226,18 +226,18 @@
           :key="'tls'"
           class="tools-legend__item tls-tool"
           :class="{
-            'disabled': isToolActionsDisabled || currentTool === 0,
+            'disabled': isTlsToolDisabled,
             'glow': shouldTLSGlow,
             'long-press-triggered': toolPress['tls']?.triggered,
             'blink-border': toolPress['tls']?.blinking
           }"
           title="TLS - Tool Length Setter (Hold to measure current tool)"
-          @mousedown="isToolActionsDisabled || currentTool === 0 ? null : startToolPress('tls', $event)"
-          @mouseup="isToolActionsDisabled || currentTool === 0 ? null : endToolPress('tls')"
-          @mouseleave="isToolActionsDisabled || currentTool === 0 ? null : cancelToolPress('tls')"
-          @touchstart="isToolActionsDisabled || currentTool === 0 ? null : startToolPress('tls', $event)"
-          @touchend="isToolActionsDisabled || currentTool === 0 ? null : endToolPress('tls')"
-          @touchcancel="isToolActionsDisabled || currentTool === 0 ? null : cancelToolPress('tls')"
+          @mousedown="isTlsToolDisabled ? null : startToolPress('tls', $event)"
+          @mouseup="isTlsToolDisabled ? null : endToolPress('tls')"
+          @mouseleave="isTlsToolDisabled ? null : cancelToolPress('tls')"
+          @touchstart="isTlsToolDisabled ? null : startToolPress('tls', $event)"
+          @touchend="isTlsToolDisabled ? null : endToolPress('tls')"
+          @touchcancel="isTlsToolDisabled ? null : cancelToolPress('tls')"
         >
           <div class="long-press-indicator long-press-horizontal" :style="{ width: `${toolPress['tls']?.progress || 0}%` }"></div>
           <span class="tools-legend__label">TLS</span>
@@ -636,6 +636,12 @@ const canStop = computed(() => {
 });
 
 const isToolActionsDisabled = computed(() => isToolChanging.value || isJobRunning.value || isConnecting.value || isAlarm.value || isHoming.value || store.homingCycle.value === 0 || !store.isHomed.value);
+const isTlsToolDisabled = computed(() =>
+  isToolActionsDisabled.value ||
+  (props.currentTool ?? 0) === 0 ||
+  (props.machineState as any)?.tloBaselineReady !== true ||
+  (props.machineState as any)?.tloRunning === true
+);
 const isProbeDisabled = computed(() => isJobRunning.value || isConnecting.value || isAlarm.value || isHomingRequired.value || isHoming.value);
 const isCoolantDisabled = computed(() => isConnecting.value || isAlarm.value || isHomingRequired.value || isHoming.value);
 
