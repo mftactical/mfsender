@@ -38,6 +38,8 @@ function parseMPosZ(controller) {
   return null;
 }
 
+let currentTLOEngine = null;
+
 export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
   const logger = typeof log === 'function' ? log : () => {};
   const bus = eventBus && typeof eventBus === 'object' ? eventBus : {};
@@ -84,11 +86,18 @@ export function initTLOEngine({ controller, settingsStore, eventBus, log }) {
     return value === undefined ? fallback : value;
   };
 
-  return {
+  const api = {
     tloState,
     refreshTLOActiveFromDollarG,
     setBaselineFromCurrentMposZ,
     runTLO,
     readSetting
   };
+
+  currentTLOEngine = api;
+  return api;
+}
+
+export function getTLOEngine() {
+  return currentTLOEngine;
 }

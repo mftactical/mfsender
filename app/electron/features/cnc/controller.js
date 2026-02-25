@@ -24,6 +24,7 @@ import { grblErrors } from './grbl-errors.js';
 import { getSetting, DEFAULT_SETTINGS } from '../../core/settings-manager.js';
 import { JogWatchdog, REALTIME_JOG_CANCEL } from './jog-manager.js';
 import { pluginEventBus } from '../../core/plugin-event-bus.js';
+import { getTLOEngine } from '../tlo-engine.js';
 import { createLogger } from '../../core/logger.js';
 
 const { log, error: logError } = createLogger('CNCController');
@@ -57,6 +58,7 @@ export class CNCController extends EventEmitter {
     this.connectionType = null;
     this.statusPollInterval = null;
     this.lastStatus = { outputPinsState: [] };
+    this.lastGCodeModes = [];
     this.rawData = '';
     this.connectionAttempt = null; // Track ongoing connection attempts
     this.isConnecting = false; // Track connection state
@@ -524,7 +526,13 @@ export class CNCController extends EventEmitter {
   parseGCodeModes(data) {
     // Example: [GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]
     const content = data.substring(4, data.length - 1); // Remove [GC: and ]
-    const modes = content.split(' ');
+    const modes = content.split(' ').filter(Boolean);
+    this.lastGCodeModes = [...modes];
+
+    const tloEngine = getTLOEngine();
+    if (tloEngine && typeof tloEngine.refreshTLOActiveFromDollarG === 'function') {
+      tloEngine.refreshTLOActiveFromDollarG(modes);
+    }
 
     let hasChanges = false;
 
