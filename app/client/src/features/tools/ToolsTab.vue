@@ -175,6 +175,47 @@
               </div>
               <div class="tool-count">{{ tools.length }} tool{{ tools.length !== 1 ? 's' : '' }} total</div>
             </div>
+            <div class="tlo-system-settings">
+              <h4 class="tlo-system-title">TLO System</h4>
+              <div class="tool-settings tlo-system-grid">
+                <div class="setting-item">
+                  <label class="setting-label">toolSetterX</label>
+                  <input v-model.number="toolSetterX" class="setting-select" type="number" step="0.001" @change="updateSetting('toolSetterX', toolSetterX)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">toolSetterY</label>
+                  <input v-model.number="toolSetterY" class="setting-select" type="number" step="0.001" @change="updateSetting('toolSetterY', toolSetterY)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">safeZ</label>
+                  <input v-model.number="safeZ" class="setting-select" type="number" step="0.001" @change="updateSetting('safeZ', safeZ)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">approachZ</label>
+                  <input v-model.number="approachZ" class="setting-select" type="number" step="0.001" @change="updateSetting('approachZ', approachZ)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">seekRate</label>
+                  <input v-model.number="seekRate" class="setting-select" type="number" step="1" @change="updateSetting('seekRate', seekRate)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">fineRate</label>
+                  <input v-model.number="fineRate" class="setting-select" type="number" step="1" @change="updateSetting('fineRate', fineRate)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">retract</label>
+                  <input v-model.number="retract" class="setting-select" type="number" step="0.001" @change="updateSetting('retract', retract)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">seekDistance</label>
+                  <input v-model.number="seekDistance" class="setting-select" type="number" step="0.001" @change="updateSetting('seekDistance', seekDistance)" />
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">fineDistance</label>
+                  <input v-model.number="fineDistance" class="setting-select" type="number" step="0.001" @change="updateSetting('fineDistance', fineDistance)" />
+                </div>
+              </div>
+            </div>
             <div v-if="toolSourceName" class="settings-note">
               Controls are disabled because they are currently controlled by Plugin: {{ toolSourceName }}
             </div>
@@ -609,6 +650,15 @@ const affectedToolsCount = ref(0);
 const showSlotSelector = ref(false);
 const slotSelectorTool = ref<Tool | null>(null);
 const slotSelectorPosition = ref({ top: 0, left: 0 });
+const toolSetterX = ref(0);
+const toolSetterY = ref(0);
+const safeZ = ref(0);
+const approachZ = ref(0);
+const seekRate = ref(100);
+const fineRate = ref(50);
+const retract = ref(1);
+const seekDistance = ref(10);
+const fineDistance = ref(3);
 
 // Tool form data
 const defaultToolForm = () => ({
@@ -1325,6 +1375,14 @@ const confirmImportWithConflicts = async () => {
   importConflictTools.value = [];
 };
 
+const updateSetting = async (key: string, value: number) => {
+  try {
+    await api.updateSettings({ [key]: Number(value) });
+  } catch (error) {
+    console.error(`Error saving setting ${key}:`, error);
+  }
+};
+
 // Lifecycle
 onMounted(async () => {
   await loadTools();
@@ -1336,6 +1394,15 @@ onMounted(async () => {
     if (response.ok) {
       const settings = await response.json();
       maxToolCount.value = settings?.tool?.count || 1;
+      toolSetterX.value = typeof settings?.toolSetterX === 'number' ? settings.toolSetterX : toolSetterX.value;
+      toolSetterY.value = typeof settings?.toolSetterY === 'number' ? settings.toolSetterY : toolSetterY.value;
+      safeZ.value = typeof settings?.safeZ === 'number' ? settings.safeZ : safeZ.value;
+      approachZ.value = typeof settings?.approachZ === 'number' ? settings.approachZ : approachZ.value;
+      seekRate.value = typeof settings?.seekRate === 'number' ? settings.seekRate : seekRate.value;
+      fineRate.value = typeof settings?.fineRate === 'number' ? settings.fineRate : fineRate.value;
+      retract.value = typeof settings?.retract === 'number' ? settings.retract : retract.value;
+      seekDistance.value = typeof settings?.seekDistance === 'number' ? settings.seekDistance : seekDistance.value;
+      fineDistance.value = typeof settings?.fineDistance === 'number' ? settings.fineDistance : fineDistance.value;
 
       // Load tool library sort settings
       const toolLibrarySettings = settings?.toolLibrary;
@@ -1713,6 +1780,26 @@ onMounted(async () => {
   color: var(--color-text-secondary);
   font-style: italic;
   text-align: left;
+}
+
+.tlo-system-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.tlo-system-title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.tlo-system-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 16px;
 }
 
 /* Slot Carousel Section */
