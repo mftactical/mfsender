@@ -17,7 +17,6 @@
 
 import fs from 'node:fs/promises';
 import { checkSameToolChange, parseM6Command, parseM98Command, isSpindleStartCommand, isSpindleStopCommand } from '../utils/gcode-patterns.js';
-import { getSetting } from './settings-manager.js';
 import { createLogger } from './logger.js';
 import { M98Expander } from '../features/macro/m98-expander.js';
 import { isValidMacroId, normalizeMacroId } from '../features/macro/m98-storage.js';
@@ -469,67 +468,6 @@ export class CommandProcessor {
         message,
         timestamp: new Date().toISOString()
       }
-    };
-  }
-
-  runToolLengthSetterFluidNC(commandId, meta = {}, machineState = {}) {
-    const commandName = 'MFSENDER_TLS';
-    const connected = this.cncController?.isConnected === true && !!this.cncController?.connection;
-    if (!connected) {
-      return this.createMacroErrorResult(commandId, commandName, meta, 'TLS requires an active CNC connection');
-    }
-
-    const homed = machineState?.homed ?? this.serverState?.machineState?.homed ?? this.cncController?.lastStatus?.homed;
-    if (homed !== true) {
-      return this.createMacroErrorResult(commandId, commandName, meta, 'TLS requires machine to be homed');
-    }
-
-    const readNumericSetting = (key, fallback) => {
-      const rawValue = getSetting(key);
-      const value = Number(rawValue === undefined ? fallback : rawValue);
-      return Number.isFinite(value) ? value : null;
-    };
-
-    const toolSetterX = readNumericSetting('toolSetterX', 0);
-    const toolSetterY = readNumericSetting('toolSetterY', 0);
-    const clearanceHeight = readNumericSetting('clearanceHeight', 5);
-    const probeDepth = readNumericSetting('probeDepth', 25);
-    const probeFeed = readNumericSetting('probeFeed', 100);
-    const offsetZ = readNumericSetting('offsetZ', 0.7535);
-
-    if ([toolSetterX, toolSetterY, clearanceHeight, probeDepth, probeFeed, offsetZ].some((v) => v === null)) {
-      return this.createMacroErrorResult(commandId, commandName, meta, 'TLS settings are invalid');
-    }
-
-    if (probeDepth <= 0) {
-      return this.createMacroErrorResult(commandId, commandName, meta, 'probeDepth must be greater than 0');
-    }
-
-    if (probeFeed <= 0) {
-      return this.createMacroErrorResult(commandId, commandName, meta, 'probeFeed must be greater than 0');
-    }
-
-    const probeDistance = Math.abs(probeDepth);
-    const commands = [
-      'G21',
-      'G90',
-      'G53 G0 Z0',
-      `G53 G0 X${toolSetterX}`,
-      `G53 G0 Y${toolSetterY}`,
-      `G53 G0 Z${clearanceHeight}`,
-      `G38.2 Z-${probeDistance} F${probeFeed}`,
-      `G10 L20 P1 Z${offsetZ}`,
-      'G53 G0 Z0'
-    ];
-
-    return {
-      shouldContinue: true,
-      commands: commands.map((cmd, index) => ({
-        command: cmd,
-        displayCommand: cmd,
-        isOriginal: index === 0,
-        ...(index === 6 ? { meta: { tlsProbe: true } } : {})
-      }))
     };
   }
 
