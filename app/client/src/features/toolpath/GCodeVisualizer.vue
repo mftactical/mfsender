@@ -468,7 +468,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, watchEffect, nextTick, reactive } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } from 'vue';
 import * as THREE from 'three';
 import GCodeVisualizer from './visualizer/gcode-visualizer.js';
 import { createGridLines, createSideViewGrid, createCoordinateAxes, createDynamicAxisLabels, createHomeIndicator, generateCuttingPointer } from './visualizer/helpers.js';
@@ -555,10 +555,6 @@ const isConnecting = computed(() => normalizedSenderStatus.value === 'connecting
 const isAlarm = computed(() => normalizedSenderStatus.value === 'alarm');
 const isHomingRequired = computed(() => normalizedSenderStatus.value === 'homing-required');
 const isHoming = computed(() => normalizedSenderStatus.value === 'homing');
-
-watchEffect(() => {
-  console.log('TLS DEBUG machineState:', props.machineState);
-});
 
 // Check if door is open via Pn pin state (even if status is idle)
 const isDoorOpenViaPn = computed(() => {
