@@ -209,15 +209,15 @@ export class CommandProcessor {
 
     // Set isToolChanging flag for valid M6 commands
     if (isValidM6) {
+      // Clear TLS pending measurement state on M6 initiation
+      this.serverState.machineState.tloDirty = false;
+
       if (this.serverState.machineState.isToolChanging !== true) {
         log(`Setting isToolChanging -> true (M6 T${m6Parse.toolNumber})`);
         this.serverState.machineState.isToolChanging = true;
-
-        // Clear TLS pending measurement state on M6 initiation
-        this.serverState.machineState.tloDirty = false;
-
-        this.broadcast('server-state-updated', this.serverState);
       }
+
+      this.broadcast('server-state-updated', this.serverState);
     }
 
     // No early return needed - process through Plugin Manager
