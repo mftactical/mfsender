@@ -148,6 +148,10 @@ export class CommandProcessor {
     }
     if (trimmedCommand !== 'MFSENDER_TLS' && /\bT\d+\b/i.test(command)) {
       engine?.markDirty?.();
+
+      // Sync TLS dirty state for frontend
+      this.serverState.machineState.tloDirty = true;
+      this.broadcast('server-state-updated', this.serverState);
     }
 
     if (trimmedCommand === 'MFSENDER_TLS') {
