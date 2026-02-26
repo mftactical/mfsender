@@ -429,6 +429,7 @@ export function registerCncEventHandlers({
     log('Tool change completion message received:', message);
     const engine = getTLOEngine();
     engine?.clearDirty?.();
+    serverState.machineState.tloDirty = false;
 
     log('Resetting isToolChanging -> false (tool change complete)');
     serverState.machineState.isToolChanging = false;
