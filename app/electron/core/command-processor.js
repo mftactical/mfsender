@@ -154,6 +154,8 @@ export class CommandProcessor {
       if (!engine) {
         throw new Error('TLO engine not initialized');
       }
+      this.serverState.machineState.isToolChanging = true;
+      this.broadcast('server-state-updated', this.serverState);
       await engine.runTLO();
       return;
     }
@@ -683,5 +685,6 @@ export class CommandProcessor {
     };
   }
 }
+
 
 
