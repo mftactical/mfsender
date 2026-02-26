@@ -212,6 +212,10 @@ export class CommandProcessor {
       if (this.serverState.machineState.isToolChanging !== true) {
         log(`Setting isToolChanging -> true (M6 T${m6Parse.toolNumber})`);
         this.serverState.machineState.isToolChanging = true;
+
+        // Clear TLS pending measurement state on M6 initiation
+        this.serverState.machineState.tloDirty = false;
+
         this.broadcast('server-state-updated', this.serverState);
       }
     }
