@@ -218,8 +218,8 @@ export class CNCController extends EventEmitter {
       }
 
       // Detect tool change completion message from tool-changer plugins
-      // Format: [MSG:TOOL_CHANGE_COMPLETE]
-      if (trimmedData.toUpperCase().includes('[MSG:TOOL_CHANGE_COMPLETE]')) {
+      // Accept format variations such as [MSG:TOOL_CHANGE_COMPLETE], [MSG: TOOL_CHANGE_COMPLETE], etc.
+      if (/\bTOOL_CHANGE_COMPLETE\b/i.test(trimmedData)) {
         this.emit('tool-change-complete', trimmedData);
         // Continue to broadcast this message
       }
