@@ -252,6 +252,12 @@ export class CommandProcessor {
           displayCommand: null,
           isOriginal: false
         });
+        commands.push({
+          command: '$G',
+          displayCommand: null,
+          isOriginal: false,
+          meta: { sourceId: 'system' }
+        });
       }
 
       return {
