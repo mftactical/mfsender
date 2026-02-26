@@ -429,11 +429,12 @@ export function registerCncEventHandlers({
     log('Tool change completion message received:', message);
     const engine = getTLOEngine();
     engine?.clearDirty?.();
-    if (serverState.machineState.isToolChanging) {
-      log('Resetting isToolChanging -> false (tool change complete)');
-      serverState.machineState.isToolChanging = false;
-      broadcast('server-state-updated', serverState);
-    }
+
+    log('Resetting isToolChanging -> false (tool change complete)');
+    serverState.machineState.isToolChanging = false;
+
+    // Always broadcast so frontend clears TLS visual state
+    broadcast('server-state-updated', serverState);
   };
 
   const jobCompleteCallback = (reason, finalJobStatus) => {
