@@ -134,6 +134,18 @@ export class CommandProcessor {
 
     const trimmedCommand = command.trim().toUpperCase();
     const engine = getTLOEngine();
+    const toolSelectMatch = command.trim().match(/^T(\d+)$/i);
+
+    if (toolSelectMatch) {
+      const toolNumber = Number.parseInt(toolSelectMatch[1], 10);
+
+      if (Number.isFinite(toolNumber)) {
+        this.serverState.machineState.tool = toolNumber;
+
+        // Sync UI immediately (no need to wait for status report)
+        this.broadcast('server-state-updated', this.serverState);
+      }
+    }
     if (trimmedCommand !== 'MFSENDER_TLS' && /\bT\d+\b/i.test(command)) {
       engine?.markDirty?.();
     }
@@ -671,3 +683,5 @@ export class CommandProcessor {
     };
   }
 }
+
+
