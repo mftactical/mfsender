@@ -209,6 +209,8 @@ export class CommandProcessor {
 
     // Set isToolChanging flag for valid M6 commands
     if (isValidM6) {
+      engine?.clearDirty?.();
+
       // Clear TLS pending measurement state on M6 initiation
       this.serverState.machineState.tloDirty = false;
 
